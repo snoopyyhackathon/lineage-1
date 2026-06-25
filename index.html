@@ -1,0 +1,3193 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lineage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Source+Sans+3:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B2520;
+    --ink-soft:#564C40;
+    --paper:#F1E9D8;
+    --paper-deep:#E8DCC2;
+    --card:#FBF6E9;
+    --green:#1F3D2E;
+    --green-light:#2C5440;
+    --brass:#B08D45;
+    --brass-light:#D4B876;
+    --rust:#A4543A;
+    --line:rgba(43,37,32,0.16);
+    --shadow:0 2px 10px rgba(43,37,32,0.08);
+    --r-base:18px;
+    --r-scale:1;
+  }
+  *{box-sizing:border-box;}
+  html{font-size:calc(16px * var(--r-scale));}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(176,141,69,0.07), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(31,61,46,0.06), transparent 55%);
+    color:var(--ink);
+    font-family:'Source Sans 3', sans-serif;
+    font-size:1rem;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  .label{
+    font-family:'Special Elite', monospace;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    font-size:0.72rem;
+    color:var(--brass);
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    color:var(--green);
+    margin:0;
+    font-weight:600;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  textarea, input{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--brass); outline-offset:2px;}
+  a{color:var(--green-light);}
+
+  /* ---------- Layout shell ---------- */
+  #app{max-width:920px;margin:0 auto;padding:0 20px 80px;}
+  header.top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 0 16px;border-bottom:1px solid var(--line);
+    flex-wrap:wrap;gap:12px;
+  }
+  .brand{display:flex;align-items:baseline;gap:12px;cursor:pointer;border-radius:8px;}
+  .brand:hover .display{color:var(--green-light);}
+  .brand .display{font-size:1.7rem;letter-spacing:0.01em;}
+  .brand .tagline{font-family:'Special Elite',monospace;font-size:0.68rem;color:var(--ink-soft);letter-spacing:0.05em;}
+  nav.tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  nav.tabs button{
+    background:transparent;border:1px solid transparent;color:var(--ink-soft);
+    padding:9px 14px;border-radius:999px;font-size:0.92rem;font-weight:600;
+    transition:background .15s, color .15s, border-color .15s;
+    white-space:nowrap;
+  }
+  nav.tabs button.active{background:var(--green);color:var(--card);border-color:var(--green);}
+  nav.tabs button:not(.active):hover{background:var(--paper-deep);border-color:var(--line);}
+
+  @media (max-width:700px){
+    header.top{flex-direction:column;align-items:stretch;gap:8px;}
+    nav.tabs{
+      flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+      padding-bottom:4px;gap:4px;
+      scrollbar-width:none;
+    }
+    nav.tabs::-webkit-scrollbar{display:none;}
+    nav.tabs button{padding:8px 12px;font-size:0.82rem;flex-shrink:0;}
+    .toolbar{justify-content:flex-end;}
+  }
+  .toolbar{display:flex;align-items:center;gap:10px;}
+  .text-toggle{display:flex;gap:4px;align-items:center;}
+  .text-toggle button{
+    width:30px;height:30px;border-radius:50%;border:1px solid var(--line);
+    background:var(--card);color:var(--green);font-weight:700;font-size:0.85rem;
+  }
+  .gear{background:none;border:1px solid var(--line);width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--green);font-size:1.1rem;}
+
+  .screen{display:none;animation:fadeIn .35s ease;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){
+    .screen{animation:none;}
+    *{transition:none !important;animation-duration:0.001s !important;}
+  }
+
+  /* ---------- Onboarding ---------- */
+  .onboard-wrap{
+    min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;
+  }
+  .onboard-card{max-width:520px;}
+  .onboard-card .display{font-size:2.6rem;line-height:1.05;margin-bottom:6px;}
+  .onboard-card .sub{color:var(--ink-soft);margin:14px 0 14px;font-size:1.08rem;}
+  .onboard-body{color:var(--ink-soft);font-size:0.96rem;line-height:1.6;margin:0 0 20px;}
+  .feature-list{list-style:none;margin:0 0 24px;padding:0;text-align:left;display:flex;flex-direction:column;gap:12px;}
+  .feature-list li{
+    display:grid;grid-template-columns:1.8rem 1fr;align-items:start;
+    gap:6px;font-size:0.93rem;color:var(--ink);
+  }
+  .feature-list li .feat-icon{font-size:1.15rem;line-height:1.5;text-align:center;}
+  .feature-list li span:last-child{line-height:1.5;}
+  .onboard-card input{
+    width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--card);font-size:1.1rem;color:var(--ink);margin-bottom:14px;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;justify-content:center;
+    background:var(--green);color:var(--card);border:none;border-radius:12px;
+    padding:13px 22px;font-size:1rem;font-weight:600;transition:background .15s, transform .1s;
+  }
+  .btn:hover{background:var(--green-light);}
+  .btn:active{transform:scale(0.98);}
+  .btn.outline{background:transparent;color:var(--green);border:1.5px solid var(--green);}
+  .btn.outline:hover{background:rgba(31,61,46,0.06);}
+  .btn.rust{background:var(--rust);}
+  .btn.rust:hover{background:#8c4630;}
+  .btn[disabled]{opacity:0.5;cursor:not-allowed;}
+  .btn.small{padding:8px 14px;font-size:0.85rem;border-radius:9px;}
+
+  /* ---------- Interview screen ---------- */
+  .interview-card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 28px;box-shadow:var(--shadow);position:relative;
+  }
+  .interview-card::before{
+    content:"";position:absolute;top:14px;left:14px;right:14px;bottom:-6px;
+    border:1px solid var(--line);border-radius:18px;z-index:-1;opacity:0.5;
+  }
+  .q-eyebrow{margin-bottom:10px;}
+  .question-text{font-size:1.5rem;font-style:italic;line-height:1.4;color:var(--green);margin-bottom:22px;}
+  .followup-chip{
+    display:inline-block;background:var(--paper-deep);color:var(--ink-soft);
+    font-size:0.78rem;padding:4px 10px;border-radius:999px;margin-bottom:14px;font-weight:600;
+  }
+  textarea.answer{
+    width:100%;min-height:140px;border:1px solid var(--line);border-radius:12px;
+    padding:14px;font-size:1.05rem;background:#fff;resize:vertical;color:var(--ink);
+  }
+  .interview-actions{display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:10px;}
+  .mic-row{display:flex;gap:10px;align-items:center;}
+  .mic-btn{
+    width:46px;height:46px;border-radius:50%;border:1.5px solid var(--green);background:var(--card);
+    color:var(--green);font-size:1.2rem;display:flex;align-items:center;justify-content:center;
+  }
+  .mic-btn.recording{background:var(--rust);border-color:var(--rust);color:#fff;animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(164,84,58,0.45);}70%{box-shadow:0 0 0 10px rgba(164,84,58,0);}100%{box-shadow:0 0 0 0 rgba(164,84,58,0);}}
+  .mic-hint{font-size:0.82rem;color:var(--ink-soft);}
+  .loading-line{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-style:italic;padding:10px 0;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--brass);animation:blink 1.2s infinite;}
+  .dot:nth-child(2){animation-delay:.2s;} .dot:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:0.25;}40%{opacity:1;}}
+
+  .saved-toast{
+    background:var(--green);color:var(--card);border-radius:14px;padding:16px 20px;margin-top:18px;
+  }
+  .saved-toast .label{color:var(--brass-light);}
+  .saved-toast .story-title{font-family:'Fraunces',serif;font-size:1.15rem;margin:4px 0 6px;}
+
+  /* ---------- Timeline ---------- */
+  .timeline-wrap{position:relative;padding-left:34px;margin-top:28px;}
+  .thread{
+    position:absolute;left:9px;top:6px;bottom:6px;width:2px;
+    background-image:linear-gradient(to bottom, var(--brass) 0 6px, transparent 6px 11px);
+    background-size:2px 11px;
+  }
+  .period-block{margin-bottom:38px;}
+  .period-tab{
+    display:inline-flex;align-items:center;gap:10px;position:relative;margin-bottom:16px;
+  }
+  .period-tab::before{
+    content:"";position:absolute;left:-30px;top:50%;transform:translateY(-50%);
+    width:13px;height:13px;border-radius:50%;background:var(--brass);border:2px solid var(--paper);
+  }
+  .period-tab h2{font-size:1.3rem;}
+  .period-count{font-family:'Special Elite',monospace;font-size:0.7rem;color:var(--ink-soft);}
+  .memory-card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+    margin-bottom:14px;box-shadow:var(--shadow);
+  }
+  .memory-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer;}
+  .memory-title{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--green);}
+  .memory-meta{font-size:0.78rem;color:var(--ink-soft);margin-top:3px;}
+  .privacy-pill{
+    font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--line);
+    background:var(--paper-deep);color:var(--ink-soft);white-space:nowrap;flex-shrink:0;
+  }
+  .privacy-pill.shared{background:rgba(31,61,46,0.1);color:var(--green);border-color:rgba(31,61,46,0.25);}
+  .memory-body{margin-top:14px;display:none;}
+  .memory-body.open{display:block;}
+  .memory-story{font-size:1.02rem;color:var(--ink);white-space:pre-wrap;}
+  .memory-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .photo-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;}
+  .photo-item{width:150px;}
+  .photo-item img{width:150px;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
+  .caption-input{
+    width:150px;font-size:0.78rem;border:none;border-bottom:1px dashed var(--line);background:transparent;
+    margin-top:6px;color:var(--ink-soft);padding:2px 0;
+  }
+  .photo-upload-label{
+    width:150px;height:110px;border:1.5px dashed var(--line);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:0.8rem;
+    text-align:center;padding:8px;
+  }
+  .comments-box{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;}
+  .comment{background:var(--paper-deep);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:0.9rem;}
+  .comment .who{font-weight:700;color:var(--green);font-size:0.82rem;}
+  .empty-state{
+    text-align:center;padding:50px 20px;color:var(--ink-soft);background:var(--card);
+    border-radius:16px;border:1px dashed var(--line);
+  }
+
+  /* ---------- Family connections ---------- */
+  .family-banner{
+    background:var(--green);color:var(--card);padding:14px 18px;border-radius:12px;margin-bottom:20px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .family-banner p{margin:0;font-size:0.92rem;}
+
+  /* ---------- Family Connections questions ---------- */
+  .question-submit{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;box-shadow:var(--shadow);margin:18px 0;
+  }
+  .question-form{display:grid;grid-template-columns:minmax(120px,180px) 1fr auto;gap:10px;margin-top:12px;}
+  .question-form input{
+    border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
+    padding:11px 12px;font-size:0.95rem;
+  }
+  .family-question-list{display:grid;gap:12px;margin-top:16px;}
+  .family-question-card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;box-shadow:var(--shadow);
+  }
+  .family-question-text{font-family:'Fraunces',serif;color:var(--green);font-size:1.08rem;line-height:1.35;}
+  .family-question-meta{color:var(--ink-soft);font-size:0.82rem;margin-top:5px;}
+  .family-question-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .question-status{
+    display:inline-flex;border:1px solid var(--line);border-radius:999px;
+    padding:3px 9px;font-size:0.72rem;font-weight:700;color:var(--ink-soft);background:var(--paper-deep);
+  }
+  .connection-flow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:12px;font-size:0.78rem;}
+  .flow-step{
+    border:1px solid var(--line);border-radius:999px;padding:4px 9px;background:var(--paper-deep);
+    color:var(--ink-soft);font-weight:700;
+  }
+  .flow-step.active{background:rgba(31,61,46,0.1);color:var(--green);border-color:rgba(31,61,46,0.25);}
+  .flow-arrow{color:var(--brass);font-weight:700;}
+  .ask-memory-box{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;}
+  .ask-memory-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .ask-memory-form input{
+    border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);
+    padding:8px;font-size:0.9rem;
+  }
+  .family-question-picker{
+    background:rgba(31,61,46,0.06);border:1px solid rgba(31,61,46,0.15);
+    border-radius:12px;padding:12px 14px;margin-bottom:16px;
+  }
+  .family-question-picker .family-question-actions{margin-top:10px;}
+
+  /* ---------- Family Wisdom Book ---------- */
+  .wisdom-grid{display:grid;gap:14px;margin-top:18px;}
+  .wisdom-card .memory-title{margin-bottom:4px;}
+  .wisdom-category-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .wisdom-category-count{font-size:0.76rem;color:var(--ink-soft);font-weight:700;}
+  .wisdom-list{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+  .wisdom-item{
+    background:var(--paper-deep);border-left:3px solid var(--brass);border-radius:10px;
+    padding:11px 13px;color:var(--ink);
+  }
+  .wisdom-text{white-space:pre-wrap;}
+  .wisdom-source-btn{
+    display:inline-flex;margin-top:8px;padding:0;border:0;background:transparent;
+    font-size:0.78rem;font-weight:700;color:var(--green-light);text-align:left;text-decoration:underline;
+  }
+  .wisdom-status{margin-top:12px;color:var(--ink-soft);font-size:0.9rem;font-style:italic;}
+  .book-intro{
+    background:var(--green);color:var(--card);border-radius:14px;padding:18px 20px;margin-top:18px;
+  }
+  .book-intro p{margin:8px 0 0;color:rgba(251,246,233,0.9);}
+  .book-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .book-cover{
+    background:linear-gradient(135deg, var(--green), #172c23);
+    color:var(--card);border-radius:16px;border:1px solid rgba(212,184,118,0.45);
+    min-height:360px;padding:34px 30px;margin-top:18px;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;
+  }
+  .book-cover::before{
+    content:"";position:absolute;inset:16px;border:1px solid rgba(212,184,118,0.5);border-radius:12px;pointer-events:none;
+  }
+  .book-cover .label{color:var(--brass-light);}
+  .book-cover-title{font-family:'Fraunces',serif;font-size:2.4rem;line-height:1.05;color:var(--card);max-width:520px;}
+  .book-cover-name{font-family:'Fraunces',serif;font-size:1.45rem;color:var(--brass-light);margin-top:10px;}
+  .book-cover-subtitle{max-width:520px;color:rgba(251,246,233,0.88);font-size:1.05rem;margin-top:12px;}
+  .book-cover-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:28px;position:relative;}
+  .book-cover-meta div{border-top:1px solid rgba(212,184,118,0.45);padding-top:8px;}
+  .book-impact{
+    background:var(--paper-deep);border-left:4px solid var(--brass);border-radius:12px;
+    padding:18px 20px;margin-top:18px;font-family:'Fraunces',serif;font-size:1.2rem;color:var(--green);
+  }
+  .book-journey{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;box-shadow:var(--shadow);margin-top:18px;
+  }
+  .journey-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;align-items:center;}
+  .journey-step{
+    background:var(--paper-deep);border-radius:10px;padding:14px;text-align:center;
+    color:var(--green);font-weight:700;min-height:72px;display:flex;align-items:center;justify-content:center;
+  }
+  .journey-arrow{color:var(--brass);font-size:1.4rem;text-align:center;font-weight:700;}
+  .book-review{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);margin-top:18px;
+  }
+  .review-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px;}
+  .review-tile{background:var(--paper-deep);border-radius:10px;padding:12px 14px;}
+  .review-tile .t{font-weight:700;color:var(--green);}
+  .review-tile .d{font-size:0.9rem;color:var(--ink-soft);margin-top:4px;}
+  .book-section-title{font-size:1.25rem;margin-top:2px;}
+  .snapshot-list{margin:8px 0 0 0;padding:0;list-style:none;display:grid;gap:6px;}
+  .snapshot-list li{background:rgba(31,61,46,0.06);border-radius:8px;padding:7px 9px;}
+  .memory-highlight{box-shadow:0 0 0 3px rgba(176,141,69,0.35), var(--shadow);}
+  .memory-card{transition:box-shadow .2s;}
+  @media (prefers-reduced-motion: reduce){
+    .memory-card{transition:none;}
+  }
+
+  /* ---------- Legacy Letter ---------- */
+  .letter-panel{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;box-shadow:var(--shadow);margin-top:18px;
+  }
+  .letter-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center;}
+  .letter-select{
+    flex:1;min-width:220px;border:1px solid var(--line);border-radius:10px;
+    background:#fff;color:var(--ink);padding:11px 12px;font-family:inherit;font-size:0.95rem;
+  }
+  .legacy-letter-output{
+    margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;white-space:pre-wrap;color:var(--ink);font-size:1.02rem;
+  }
+  .letter-note{color:var(--ink-soft);font-size:0.9rem;margin:8px 0 0;}
+
+  /* ---------- Untold Stories ---------- */
+  .gap-summary{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px;
+  }
+  .gap-chip{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:13px 14px;box-shadow:var(--shadow);
+  }
+  .gap-chip.missing{border-left:4px solid var(--rust);}
+  .gap-chip.covered{border-left:4px solid var(--green-light);opacity:0.72;}
+  .gap-chip .t{font-weight:700;color:var(--green);}
+  .gap-chip .d{font-size:0.84rem;color:var(--ink-soft);margin-top:3px;}
+  .gap-question-list{display:grid;gap:12px;margin-top:16px;}
+  .gap-question-card{
+    background:var(--paper-deep);border-left:3px solid var(--brass);border-radius:10px;
+    padding:13px 15px;color:var(--ink);
+  }
+  .gap-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  /* ---------- Settings ---------- */
+  .settings-row{
+    display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);
+    gap:16px;flex-wrap:wrap;
+  }
+  .settings-row .t{font-weight:600;}
+  .settings-row .d{font-size:0.85rem;color:var(--ink-soft);margin-top:2px;}
+
+  input[type="text"], input[type="checkbox"]{accent-color:var(--green);}
+
+  /* ---------- Nav active indicator ---------- */
+  nav.tabs button.active{
+    background:var(--green);color:var(--card);border-color:var(--green);
+    box-shadow:0 2px 8px rgba(31,61,46,0.18);
+  }
+
+  /* ---------- Interview progress bar ---------- */
+  .interview-progress{
+    display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  }
+  .progress-track{
+    flex:1;height:5px;background:var(--paper-deep);border-radius:999px;overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;background:linear-gradient(90deg,var(--brass),var(--brass-light));
+    border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-label{font-family:'Special Elite',monospace;font-size:0.68rem;color:var(--brass);white-space:nowrap;}
+
+  /* ---------- Word count ---------- */
+  .answer-footer{
+    display:flex;justify-content:flex-end;margin-top:4px;
+  }
+  .word-count{font-size:0.76rem;color:var(--ink-soft);}
+
+  /* ---------- Save animation ---------- */
+  @keyframes saveSlideIn{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .saved-toast{animation:saveSlideIn .4s ease;}
+
+  /* ---------- Keyboard hint ---------- */
+  .kbd-hint{
+    font-size:0.74rem;color:var(--ink-soft);
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .kbd{
+    display:inline-block;background:var(--paper-deep);border:1px solid var(--line);
+    border-radius:5px;padding:1px 5px;font-family:'Special Elite',monospace;font-size:0.7rem;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Memory search ---------- */
+  .timeline-toolbar{
+    display:flex;gap:10px;align-items:center;margin:16px 0 4px;flex-wrap:wrap;
+  }
+  .search-input{
+    flex:1;min-width:180px;padding:10px 14px;border:1px solid var(--line);border-radius:999px;
+    background:var(--card);color:var(--ink);font-size:0.95rem;font-family:inherit;
+  }
+  .search-input:focus{border-color:var(--brass);outline:none;}
+  .period-filter{
+    border:1px solid var(--line);border-radius:999px;padding:9px 14px;
+    background:var(--card);color:var(--ink-soft);font-size:0.88rem;font-family:inherit;cursor:pointer;
+  }
+  .search-results-label{font-size:0.82rem;color:var(--ink-soft);margin:6px 0 10px;}
+
+  /* ---------- Card hover ---------- */
+  .memory-card:hover{box-shadow:0 4px 18px rgba(43,37,32,0.12);}
+  .memory-card{transition:box-shadow .2s;}
+
+  /* ---------- Family Connections role switcher ---------- */
+  .role-switcher{
+    display:flex;gap:0;border:1.5px solid var(--green);border-radius:12px;overflow:hidden;
+    margin-bottom:22px;
+  }
+  .role-btn{
+    flex:1;padding:13px 10px;background:transparent;border:none;font-size:0.95rem;
+    font-weight:700;color:var(--green);cursor:pointer;transition:background .15s,color .15s;
+    text-align:center;font-family:inherit;
+  }
+  .role-btn.active{background:var(--green);color:var(--card);}
+  .role-btn:not(.active):hover{background:rgba(31,61,46,0.07);}
+  .role-divider{width:1.5px;background:var(--green);flex-shrink:0;}
+
+  .role-intro{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;box-shadow:var(--shadow);margin-bottom:20px;
+  }
+  .role-intro .role-icon{font-size:2rem;margin-bottom:8px;line-height:1;}
+  .role-intro h2{font-size:1.2rem;margin-bottom:6px;}
+  .role-intro p{color:var(--ink-soft);font-size:0.93rem;margin:0;}
+  .role-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;}
+  .role-step{
+    background:var(--paper-deep);border-radius:10px;padding:12px;
+    font-size:0.85rem;color:var(--ink);
+  }
+  .role-step strong{display:block;color:var(--green);margin-bottom:3px;}
+
+  /* ---------- Untold Stories visual map ---------- */
+  .chapter-map{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+    gap:14px;margin:20px 0;
+  }
+  .chapter-tile{
+    border-radius:14px;padding:16px 14px;cursor:pointer;
+    transition:transform .15s, box-shadow .15s;border:1.5px solid transparent;
+    position:relative;overflow:hidden;
+  }
+  .chapter-tile:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(43,37,32,0.12);}
+  .chapter-tile.covered{
+    background:rgba(31,61,46,0.07);border-color:rgba(31,61,46,0.2);
+  }
+  .chapter-tile.missing{
+    background:var(--card);border-color:var(--rust);
+    box-shadow:0 2px 8px rgba(164,84,58,0.1);
+  }
+  .chapter-tile .tile-icon{font-size:1.8rem;margin-bottom:8px;line-height:1;}
+  .chapter-tile .tile-title{font-family:'Fraunces',serif;font-size:1rem;color:var(--green);font-weight:600;}
+  .chapter-tile .tile-status{
+    font-family:'Special Elite',monospace;font-size:0.65rem;letter-spacing:0.1em;
+    text-transform:uppercase;margin-top:5px;
+  }
+  .chapter-tile.covered .tile-status{color:var(--green-light);}
+  .chapter-tile.missing .tile-status{color:var(--rust);}
+  .chapter-tile .tile-badge{
+    position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;
+  }
+  .chapter-tile.covered .tile-badge{background:var(--green-light);}
+  .chapter-tile.missing .tile-badge{background:var(--rust);}
+
+  .chapter-detail{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px;box-shadow:var(--shadow);margin-top:4px;
+    animation:fadeIn .25s ease;
+  }
+  .chapter-detail .detail-why{
+    background:var(--paper-deep);border-left:3px solid var(--brass);
+    border-radius:8px;padding:10px 14px;font-style:italic;color:var(--ink-soft);
+    font-size:0.93rem;margin:12px 0;
+  }
+  .chapter-detail .detail-questions{margin-top:14px;}
+  .chapter-detail .detail-questions li{
+    padding:7px 0;border-bottom:1px solid var(--line);font-size:0.93rem;color:var(--ink);
+  }
+  .chapter-detail .detail-questions li:last-child{border-bottom:none;}
+  .gap-map-summary{
+    display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;
+  }
+  .gap-stat{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 18px;flex:1;min-width:130px;box-shadow:var(--shadow);
+  }
+  .gap-stat .stat-num{font-family:'Fraunces',serif;font-size:2rem;color:var(--green);line-height:1;}
+  .gap-stat .stat-label{font-size:0.82rem;color:var(--ink-soft);margin-top:3px;}
+
+  /* ---------- Onboard char counter ---------- */
+  .input-row{position:relative;}
+  .char-counter{
+    position:absolute;right:14px;top:50%;transform:translateY(-50%);
+    font-size:0.72rem;color:var(--ink-soft);pointer-events:none;
+  }
+
+  /* ---------- Smooth tab body fade ---------- */
+  .screen{animation:fadeIn .28s ease;}
+
+  /* ---------- Period filter active ---------- */
+  .period-filter-btn{
+    padding:7px 14px;border-radius:999px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink-soft);font-size:0.85rem;
+    font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s,color .15s;
+  }
+  .period-filter-btn.active{background:var(--green);color:var(--card);border-color:var(--green);}
+
+  /* ---------- Comprehensive mobile breakpoints ---------- */
+  @media (max-width:480px){
+    #app{padding:0 12px 80px;}
+    .onboard-card .display{font-size:1.8rem;}
+    .interview-card{padding:18px 14px;}
+    .question-text{font-size:1.2rem;}
+    .question-form{grid-template-columns:1fr;gap:8px;}
+    .question-form input{width:100%;}
+    .interview-actions{flex-direction:column;align-items:stretch;gap:8px;}
+    .interview-actions > div{justify-content:stretch;}
+    .interview-actions .btn, .interview-actions .btn.outline{width:100%;justify-content:center;}
+    .kbd-hint{display:none;}
+    .book-cover{padding:22px 18px;}
+    .book-cover-title{font-size:1.7rem;}
+    .role-steps{grid-template-columns:1fr;}
+    .archive-stats{gap:8px;}
+    .archive-stat{min-width:70px;padding:8px 10px;}
+    .archive-stat .s-num{font-size:1.2rem;}
+    .chapter-map{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+    .gap-map-summary{flex-direction:column;}
+    .review-grid{grid-template-columns:1fr;}
+    .journey-steps{grid-template-columns:1fr;}
+    .journey-arrow{transform:rotate(0deg);}
+    .diff-banner{flex-direction:column;gap:8px;}
+    .tour-card{padding:22px 18px;}
+    .tour-title{font-size:1.3rem;}
+    .settings-row{flex-direction:column;align-items:flex-start;gap:10px;}
+    .settings-row .btn, .settings-row input[type=checkbox]{align-self:flex-start;}
+    .memory-controls{flex-direction:column;}
+    .ask-memory-form{flex-direction:column;}
+    .ask-memory-form input{width:100%;}
+    .letter-controls{flex-direction:column;}
+    .letter-select{min-width:unset;width:100%;}
+    .book-cover-meta{grid-template-columns:1fr 1fr;}
+  }
+
+  @media (max-width:380px){
+    .brand .display{font-size:1.3rem;}
+    .brand .tagline{display:none;}
+    nav.tabs button{padding:7px 9px;font-size:0.76rem;}
+    .onboard-card .display{font-size:1.5rem;}
+    .chapter-map{grid-template-columns:1fr 1fr;}
+    .impact-stats{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Skeleton loaders ---------- */
+  @keyframes shimmer{
+    0%{background-position:-600px 0;}
+    100%{background-position:600px 0;}
+  }
+  .skeleton{
+    background:linear-gradient(90deg, var(--paper-deep) 25%, var(--card) 50%, var(--paper-deep) 75%);
+    background-size:600px 100%;
+    animation:shimmer 1.4s infinite linear;
+    border-radius:8px;
+  }
+  .skeleton-block{height:16px;margin-bottom:10px;}
+  .skeleton-block.tall{height:80px;}
+  .skeleton-block.short{width:60%;height:12px;}
+  .skeleton-card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow);
+  }
+
+  /* ---------- Impact statement ---------- */
+  .impact-banner{
+    background:linear-gradient(135deg,#1a3528,#0e2019);
+    color:var(--card);border-radius:16px;padding:24px 22px;margin:20px 0;
+    border:1px solid rgba(212,184,118,0.3);
+  }
+  .impact-banner h2{font-family:'Fraunces',serif;color:var(--card);font-size:1.3rem;margin-bottom:6px;}
+  .impact-banner p{color:rgba(251,246,233,0.8);font-size:0.9rem;margin:0 0 16px;}
+  .impact-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;}
+  .impact-stat{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:18px 12px;min-height:110px;
+    background:rgba(255,255,255,0.07);border-radius:10px;
+  }
+  .impact-stat .i-num{
+    font-family:'Fraunces',serif;color:var(--brass-light);line-height:1;
+    font-size:2.2rem;font-weight:600;
+  }
+  .impact-stat .i-num.word{font-size:1.5rem;}
+  .impact-stat .i-label{
+    font-size:0.78rem;color:rgba(251,246,233,0.75);
+    margin-top:8px;line-height:1.35;
+  }
+
+  /* ---------- Devpost panel ---------- */
+  .devpost-panel{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;box-shadow:var(--shadow);margin-top:16px;
+  }
+  .devpost-field{margin-bottom:16px;}
+  .devpost-field label{
+    display:block;font-family:'Special Elite',monospace;font-size:0.68rem;
+    color:var(--brass);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;
+  }
+  .devpost-text{
+    width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;
+    background:var(--paper-deep);color:var(--ink);font-size:0.88rem;line-height:1.6;
+    font-family:inherit;resize:vertical;
+  }
+  .devpost-copy-btn{
+    margin-top:6px;padding:5px 12px;font-size:0.78rem;border-radius:7px;
+    background:var(--green);color:var(--card);border:none;cursor:pointer;font-family:inherit;font-weight:600;
+  }
+  .devpost-copy-btn:hover{background:var(--green-light);}
+  @media print{
+    body{background:#fff;}
+    #app{max-width:none;padding:0;}
+    header.top,.book-intro,.wisdom-source-btn,.book-actions{display:none !important;}
+    .screen{display:none !important;}
+    #screen-wisdom{display:block !important;}
+    #screen-wisdom > div:first-child{display:none !important;}
+    .book-cover,.book-review,.memory-card{box-shadow:none;break-inside:avoid;}
+    .book-cover{min-height:720px;page-break-after:always;}
+    .wisdom-card{page-break-inside:avoid;}
+  }
+
+  /* ---------- Confetti canvas ---------- */
+  #confettiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;}
+
+  /* ---------- Streak badge ---------- */
+  .streak-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    background:linear-gradient(135deg,var(--brass),var(--brass-light));
+    color:#fff;border-radius:999px;padding:5px 12px;
+    font-family:'Special Elite',monospace;font-size:0.7rem;letter-spacing:0.06em;font-weight:700;
+  }
+
+  /* ---------- Interview header row ---------- */
+  .interview-header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;flex-wrap:wrap;gap:8px;
+  }
+
+  /* ---------- Archive stats bar ---------- */
+  .archive-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+  .archive-stat{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:10px 14px;flex:1;min-width:80px;box-shadow:var(--shadow);text-align:center;
+  }
+  .archive-stat .s-num{font-family:'Fraunces',serif;font-size:1.5rem;color:var(--green);line-height:1;}
+  .archive-stat .s-label{font-size:0.7rem;color:var(--ink-soft);margin-top:2px;}
+
+  /* ---------- Copy / share buttons ---------- */
+  .btn.copy{background:var(--paper-deep);color:var(--green);border:1.5px solid var(--line);}
+  .btn.copy:hover{background:var(--paper);border-color:var(--green);}
+  .copy-tick{display:none;color:var(--green-light);font-size:0.82rem;margin-left:6px;}
+  .copy-tick.show{display:inline;}
+
+  /* ---------- Share / export panel ---------- */
+  .share-panel{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin-top:16px;box-shadow:var(--shadow);
+  }
+  .share-url-box{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;
+    background:var(--paper-deep);font-size:0.85rem;color:var(--ink-soft);
+    font-family:'Special Elite',monospace;letter-spacing:0.03em;
+    word-break:break-all;margin:10px 0;line-height:1.5;
+  }
+
+  /* ---------- Settings visual upgrade ---------- */
+  .settings-section-title{
+    font-family:'Fraunces',serif;font-size:1.1rem;color:var(--green);
+    margin:28px 0 4px;padding-bottom:6px;border-bottom:2px solid var(--brass);
+    font-weight:600;
+  }
+  .settings-card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);overflow:hidden;margin-bottom:8px;
+  }
+  .settings-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 20px;border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap;
+  }
+  .settings-row:last-child{border-bottom:none;}
+  .settings-row .t{font-weight:600;color:var(--ink);}
+  .settings-row .d{font-size:0.85rem;color:var(--ink-soft);margin-top:2px;}
+  .settings-icon{font-size:1.4rem;margin-right:10px;flex-shrink:0;}
+
+  /* ---------- Wisdom book explainer banner ---------- */
+  .wisdom-explainer{
+    background:var(--paper-deep);border-left:4px solid var(--brass);
+    border-radius:12px;padding:14px 18px;margin-bottom:20px;margin-top:16px;
+    font-size:0.93rem;color:var(--ink-soft);
+  }
+  .wisdom-explainer strong{color:var(--green);}
+
+  /* ---------- Demo mode notice ---------- */
+  .api-notice{
+    background:linear-gradient(135deg, rgba(176,141,69,0.12), rgba(212,184,118,0.08));
+    border:1px solid rgba(176,141,69,0.4);
+    border-radius:12px;padding:14px 18px;margin-top:16px;
+    font-size:0.88rem;color:var(--ink);display:none;
+    line-height:1.55;
+  }
+  .api-notice.show{display:block;}
+  .api-notice strong{color:var(--green);}
+
+  /* ---------- Tour / walkthrough ---------- */
+  .tour-overlay{
+    position:fixed;inset:0;background:rgba(43,37,32,0.55);
+    z-index:1000;display:flex;align-items:center;justify-content:center;
+  }
+  .tour-card{
+    background:var(--card);border-radius:18px;padding:32px 28px;
+    max-width:480px;width:90%;box-shadow:0 12px 40px rgba(43,37,32,0.25);
+    position:relative;animation:fadeIn .3s ease;
+  }
+  .tour-step-label{font-family:'Special Elite',monospace;font-size:0.68rem;
+    color:var(--brass);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+  .tour-title{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--green);margin-bottom:10px;}
+  .tour-body{color:var(--ink-soft);font-size:0.96rem;line-height:1.6;margin-bottom:20px;}
+  .tour-dots{display:flex;gap:6px;margin-bottom:20px;}
+  .tour-dot{width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .tour-dot.active{background:var(--brass);}
+  .tour-actions{display:flex;justify-content:space-between;align-items:center;}
+  .tour-skip{background:none;border:none;color:var(--ink-soft);font-size:0.88rem;cursor:pointer;padding:4px;}
+
+  /* ---------- Differentiation pill on wisdom book ---------- */
+  .diff-banner{
+    display:flex;align-items:flex-start;gap:14px;
+    background:linear-gradient(135deg,var(--green),#172c23);
+    color:var(--card);border-radius:14px;padding:20px;margin-bottom:20px;
+  }
+  .diff-banner .diff-icon{font-size:2rem;flex-shrink:0;}
+  .diff-banner h3{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--card);margin-bottom:4px;}
+  .diff-banner p{font-size:0.88rem;color:rgba(251,246,233,0.85);margin:0;}
+
+  /* ---------- "Unique to Lineage" badge ---------- */
+  .unique-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    background:var(--green);color:var(--card);
+    border-radius:999px;padding:4px 10px;
+    font-family:'Special Elite',monospace;font-size:0.65rem;
+    letter-spacing:0.08em;font-weight:700;text-transform:uppercase;
+    margin-left:8px;vertical-align:middle;
+  }
+  .unique-badge::before{content:"✦";color:var(--brass-light);}
+</style>
+</head>
+<body>
+<canvas id="confettiCanvas" style="display:none;"></canvas>
+<div id="tourOverlay" class="tour-overlay" style="display:none;"></div>
+<div id="app">
+
+  <header class="top" id="topHeader" style="display:none;">
+    <div class="brand" id="brandHome" role="button" tabindex="0" aria-label="Go to home">
+      <span class="display">Lineage</span>
+      <span class="tagline">your AI family historian</span>
+    </div>
+    <nav class="tabs" id="navTabs">
+      <button data-screen="interview">Tell a Story</button>
+      <button data-screen="timeline">The Timeline</button>
+      <button data-screen="family">Family Connections</button>
+      <button data-screen="wisdom">Family Wisdom Book</button>
+      <button data-screen="gaps">Untold Stories</button>
+      <button data-screen="legacy">Legacy Letter</button>
+    </nav>
+    <div class="toolbar">
+      <div class="text-toggle" title="Adjust text size">
+        <button id="textSmaller" aria-label="Smaller text">A-</button>
+        <button id="textLarger" aria-label="Larger text">A+</button>
+      </div>
+      <button class="gear" id="settingsBtn" aria-label="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ONBOARDING -->
+  <section class="screen active" id="screen-onboard">
+    <div class="onboard-wrap">
+      <div class="onboard-card">
+        <div class="label" style="margin-bottom:10px;" id="onboardEyebrow">For the stories only you can tell</div>
+        <h1 class="display">Lineage</h1>
+        <p class="sub" id="onboardSub">Turn memories into a legacy your family can inherit.</p>
+        <p class="onboard-body" id="onboardBody">Every family carries stories, lessons, and traditions that risk being lost over time. Lineage helps preserve them through simple conversations, transforming memories into a living archive that future generations can explore, learn from, and cherish.</p>
+        <ul class="feature-list" id="onboardFeatures">
+          <li><span class="feat-icon">🎙️</span><span>Share through conversation — no writing or perfect wording required</span></li>
+          <li><span class="feat-icon">📖</span><span>Preserve stories, values, traditions, advice, and life lessons</span></li>
+          <li><span class="feat-icon">👨‍👩‍👧</span><span>Build a living family archive that grows for future generations</span></li>
+          <li><span class="feat-icon">✨</span><span>AI extracts wisdom and writes a Legacy Letter in your own voice</span></li>
+        </ul>
+        <div class="impact-banner" id="onboardImpact">
+          <h2>Why this matters</h2>
+          <p style="margin-bottom:0;">Every day, elderly relatives pass away without their stories ever being recorded — not because families don't care, but because no one knew how to start the conversation.</p>
+        </div>
+        <div class="input-row" style="margin-top:20px;">
+          <input type="text" id="nameInput" placeholder="What should we call you?" maxlength="40" style="padding-right:48px;" />
+          <span class="char-counter" id="nameCharCount">0/40</span>
+        </div>
+        <button class="btn" id="beginBtn" style="width:100%;">Begin my archive</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERVIEW -->
+  <section class="screen" id="screen-interview">
+    <div class="interview-header">
+      <div>
+        <div class="label" id="interviewGreeting">Today's session</div>
+        <h1 class="display" style="font-size:1.6rem;" id="interviewHeadline">What story are we preserving?</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button id="quickTourBtn" style="background:transparent;border:1.5px solid var(--brass);color:var(--brass);border-radius:999px;padding:6px 14px;font-size:0.82rem;font-family:inherit;font-weight:600;cursor:pointer;">🗺️ Take the tour</button>
+        <div id="streakBadgeSlot"></div>
+      </div>
+    </div>
+    <div id="archiveStatsBar"></div>
+    <div class="interview-card" id="interviewCard">
+      <div class="loading-line"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Lineage is thinking of a question...</div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-timeline">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;">
+      <h1 class="display" style="font-size:1.9rem;">The Timeline</h1>
+      <span class="label" id="memoryCountLabel"></span>
+    </div>
+    <div class="timeline-toolbar">
+      <input type="search" class="search-input" id="timelineSearch" placeholder="Search memories..." aria-label="Search memories" />
+    </div>
+    <div id="periodFilters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
+    <div id="searchResultsLabel" class="search-results-label" style="display:none;"></div>
+    <div id="timelineContent"></div>
+  </section>
+
+  <!-- FAMILY CONNECTIONS -->
+  <section class="screen" id="screen-family">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+      <h1 class="display" style="font-size:1.9rem;">Family Connections<span class="unique-badge">Unique to Lineage</span></h1>
+    </div>
+    <p style="color:var(--ink-soft);margin:0 0 18px;font-size:0.92rem;max-width:640px;">The only memory app where a grandchild's question becomes a grandmother's interview prompt — closing the loop between storytellers and listeners across generations.</p>
+    <div class="role-switcher">
+      <button class="role-btn active" id="roleStoryteller">🎙️ I'm the Storyteller</button>
+      <div class="role-divider"></div>
+      <button class="role-btn" id="roleFamily">👨‍👩‍👧 I'm a Family Member</button>
+    </div>
+    <div id="familyContent"></div>
+  </section>
+
+  <!-- FAMILY WISDOM BOOK -->
+  <section class="screen" id="screen-wisdom">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;">
+      <h1 class="display" style="font-size:1.9rem;">Family Wisdom Book</h1>
+      <span class="label" id="wisdomCountLabel"></span>
+    </div>
+    <div class="diff-banner">
+      <div class="diff-icon">💡</div>
+      <div>
+        <h3>What makes Lineage different</h3>
+        <p>Most memory apps preserve <em>what happened</em>. Lineage goes further — it extracts the lessons, values, traditions, and advice buried inside every story, then organizes them into a book future generations can actually learn from.</p>
+      </div>
+    </div>
+    <div class="book-intro">
+      <div class="label">The final outcome of Lineage</div>
+      <h2 style="font-size:1.35rem;color:var(--card);margin-top:4px;">From memories to a living family book</h2>
+      <p>AI interviews capture stories. Wisdom extraction finds what matters inside them. The result is a Family Wisdom Book that grows with every new memory.</p>
+      <div class="book-actions">
+        <button class="btn" id="generateWisdomBookBtn">Generate Family Wisdom Book</button>
+        <button class="btn outline" id="exportWisdomBookBtn">Export as PDF</button>
+      </div>
+    </div>
+    <div id="wisdomContent"></div>
+  </section>
+
+  <!-- UNTOLD STORIES -->
+  <section class="screen" id="screen-gaps">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;">
+      <h1 class="display" style="font-size:1.9rem;">Untold Stories<span class="unique-badge">Unique to Lineage</span></h1>
+      <span class="label" id="gapCountLabel"></span>
+    </div>
+    <div class="family-banner" style="margin-top:18px;">
+      <p><strong>The first memory app that tracks life-completeness, not just memory count.</strong> Lineage analyzes your archive and identifies the important life chapters still waiting to be told — then generates targeted questions to help fill them.</p>
+    </div>
+    <div id="gapContent"></div>
+  </section>
+
+  <!-- LEGACY LETTER -->
+  <section class="screen" id="screen-legacy">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;">
+      <h1 class="display" style="font-size:1.9rem;">Legacy Letter</h1>
+      <span class="label" id="legacyCountLabel"></span>
+    </div>
+    <div class="letter-panel">
+      <div class="label" style="margin-bottom:8px;">A letter from your life</div>
+      <p style="margin:0;color:var(--ink-soft);">After several memories are saved, Lineage can draft a warm first-person letter for children, grandchildren, or future family members. It only uses details from saved memories and preserves the storyteller's voice.</p>
+      <div class="letter-controls">
+        <select class="letter-select" id="legacyAudience">
+          <option value="my children">My children</option>
+          <option value="my grandchildren">My grandchildren</option>
+          <option value="future family members">Future family members</option>
+          <option value="my family">My family</option>
+        </select>
+        <button class="btn" id="generateLegacyBtn">Generate letter</button>
+      </div>
+      <p class="letter-note" id="legacyNote"></p>
+      <div id="legacyLetterContent"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="screen-settings">
+    <h1 class="display" style="font-size:1.7rem;margin-top:24px;">Settings</h1>
+    <p style="color:var(--ink-soft);margin:6px 0 0;font-size:0.92rem;">Manage your archive and preferences.</p>
+
+    <div class="settings-section-title">Your Archive</div>
+    <div class="settings-card">
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">🎙️</span>
+          <div><div class="t">Storyteller name</div><div class="d" id="nameDisplay"></div></div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">⬇️</span>
+          <div><div class="t">Export all stories</div><div class="d">Download every saved memory as a plain text file you can keep forever — your data is always yours.</div></div>
+        </div>
+        <button class="btn outline small" id="exportStoriesBtn">Export .txt</button>
+      </div>
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">🔗</span>
+          <div><div class="t">Share Lineage</div><div class="d">Copy a link to this app for family members to explore the archive together.</div></div>
+        </div>
+        <button class="btn outline small" id="shareAppBtn">Copy link</button>
+      </div>
+    </div>
+
+    <div class="settings-section-title">Accessibility</div>
+    <div class="settings-card">
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">🔡</span>
+          <div><div class="t">Large text</div><div class="d">Make everything bigger and easier to read — important for older storytellers.</div></div>
+        </div>
+        <input type="checkbox" id="largeTextToggle" style="width:22px;height:22px;" />
+      </div>
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">🗺️</span>
+          <div><div class="t">Take the tour</div><div class="d">A quick walkthrough of every feature in Lineage — great for new users.</div></div>
+        </div>
+        <button class="btn outline small" id="startTourBtn">Start tour</button>
+      </div>
+    </div>
+
+    <div class="settings-section-title">Privacy</div>
+    <div class="settings-card">
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">🔒</span>
+          <div><div class="t">Memory privacy</div><div class="d">Any memory can be marked Private from its card in the Timeline. Private memories never appear in Family Connections and are only visible to you.</div></div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">💾</span>
+          <div><div class="t">Data storage</div><div class="d">Your archive is stored only on this device. No account required. Export your stories at any time to keep a permanent copy.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section-title">Reset</div>
+    <div class="settings-card">
+      <div class="settings-row">
+        <div style="display:flex;align-items:flex-start;">
+          <span class="settings-icon">🗑️</span>
+          <div><div class="t">Start over</div><div class="d">Clears every story, photo, and comment from this device. This cannot be undone — export first if you want to keep a copy.</div></div>
+        </div>
+        <button class="btn rust small" id="resetBtn">Clear archive</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const PERIODS = ["Childhood","Coming of Age","Love & Family","Career & Purpose","Later Years","General Memories"];
+const API_URL = "https://api.anthropic.com/v1/messages";
+const MODEL = "claude-sonnet-4-6";
+
+let state = {
+  profile: null,
+  memories: [],
+  comments: {},
+  familyQuestions: [],
+  settings: { textScale: 1 },
+  currentQuestion: null,
+  currentFamilyQuestionId: null,
+  buffer: [],
+  clarificationPending: false,
+  recognition: null,
+  isRecording: false,
+};
+
+// ---------- storage helpers ----------
+// Uses window.storage when available (Claude artifact environment),
+// falls back to localStorage everywhere else.
+const _storage = {
+  async get(key){
+    if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function'){
+      return await window.storage.get(key);
+    }
+    const value = localStorage.getItem(key);
+    return value === null ? null : { value };
+  },
+  async set(key, value){
+    if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function'){
+      return await window.storage.set(key, value);
+    }
+    localStorage.setItem(key, value);
+  }
+};
+
+async function loadAll(){
+  try{
+    const p = await _storage.get('lineage:profile');
+    state.profile = p ? JSON.parse(p.value) : null;
+  }catch(e){ state.profile = null; }
+  try{
+    const m = await _storage.get('lineage:memories');
+    state.memories = m ? JSON.parse(m.value) : [];
+  }catch(e){ state.memories = []; }
+  try{
+    const c = await _storage.get('lineage:comments');
+    state.comments = c ? JSON.parse(c.value) : {};
+  }catch(e){ state.comments = {}; }
+  try{
+    const q = await _storage.get('lineage:familyQuestions');
+    state.familyQuestions = q ? JSON.parse(q.value) : [];
+  }catch(e){ state.familyQuestions = []; }
+  try{
+    const s = await _storage.get('lineage:settings');
+    state.settings = s ? JSON.parse(s.value) : { textScale: 1 };
+  }catch(e){ state.settings = { textScale: 1 }; }
+}
+async function saveProfile(){ try{ await _storage.set('lineage:profile', JSON.stringify(state.profile)); }catch(e){console.error(e);} }
+async function saveMemories(){ try{ await _storage.set('lineage:memories', JSON.stringify(state.memories)); }catch(e){console.error(e);} }
+async function saveComments(){ try{ await _storage.set('lineage:comments', JSON.stringify(state.comments)); }catch(e){console.error(e);} }
+async function saveFamilyQuestions(){ try{ await _storage.set('lineage:familyQuestions', JSON.stringify(state.familyQuestions)); }catch(e){console.error(e);} }
+async function saveSettings(){ try{ await _storage.set('lineage:settings', JSON.stringify(state.settings)); }catch(e){console.error(e);} }
+
+// ---------- AI helpers ----------
+function extractJSON(text){
+  if(!text) return null;
+  let t = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  const start = t.indexOf('{'); const end = t.lastIndexOf('}');
+  if(start === -1 || end === -1) return null;
+  try{ return JSON.parse(t.slice(start, end+1)); }catch(e){ return null; }
+}
+
+async function callClaude(system, userText, imageDataUrl){
+  const content = [];
+  if(imageDataUrl){
+    const match = imageDataUrl.match(/^data:(image\/\w+);base64,(.*)$/);
+    if(match){
+      content.push({type:"image", source:{type:"base64", media_type:match[1], data:match[2]}});
+    }
+  }
+  content.push({type:"text", text:userText});
+  // 8-second timeout so the app never hangs waiting for a non-responsive API
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 8000);
+  let resp;
+  try{
+    resp = await fetch(API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1000,
+        system: system,
+        messages: [{role:"user", content}]
+      }),
+      signal: controller.signal
+    });
+  }finally{
+    clearTimeout(timeout);
+  }
+  if(!resp.ok){
+    throw new Error(`API returned ${resp.status}`);
+  }
+  const data = await resp.json();
+  if(data.error){
+    throw new Error(data.error.message || 'API error');
+  }
+  const text = (data.content || []).map(b => b.type==='text' ? b.text : '').join('\n');
+  return text;
+}
+
+// ---------- offline fallback question bank ----------
+// Used when the Claude API is unavailable so the app still works for anyone, anywhere.
+const FALLBACK_QUESTIONS = {
+  Childhood: [
+    "What's a smell from your childhood that takes you straight back the moment you notice it?",
+    "Tell me about a room from the house you grew up in. What did the light look like in there?",
+    "Who was the first friend you remember choosing for yourself?",
+    "What's a meal from childhood that no one makes the way you remember it?",
+    "What's a place you used to go that doesn't exist anymore?",
+    "What was bedtime like in your family when you were small?"
+  ],
+  'Coming of Age': [
+    "When did you first feel like an adult? Not legally — really.",
+    "What's one decision you made as a young person that surprised the people around you?",
+    "Tell me about the first time you went somewhere completely on your own.",
+    "Who was the first person outside your family who really saw you?",
+    "What's something you believed strongly at twenty that you don't believe anymore?"
+  ],
+  'Love & Family': [
+    "How did you meet your partner? Walk me through the actual day.",
+    "What's a small thing your partner does that you've never told them you love?",
+    "Tell me about the day you found out you were going to be a parent.",
+    "What's one tradition in your family that started by accident?",
+    "Who in your family makes you laugh the hardest, and why?"
+  ],
+  'Career & Purpose': [
+    "What was your first job, and what did you learn there that you still use?",
+    "Tell me about a coworker or boss who shaped how you think about work.",
+    "What's a project or moment from your career that you're quietly proud of?",
+    "Was there ever a time you almost gave up on something important? What changed?",
+    "What did you think you wanted to do when you grew up, and how did that change?"
+  ],
+  'Joys & Hardships': [
+    "What's a hard thing you went through that you're glad you understand now?",
+    "Tell me about a stretch of life that felt small at the time but matters now.",
+    "What's something you've forgiven yourself for, and what's something you haven't?",
+    "When did you last laugh until you cried? What was happening?",
+    "What's a loss in your life that taught you how to love people better?"
+  ],
+  'Reflections & Wisdom': [
+    "If you could send one piece of advice back to yourself at twenty-five, what would it be?",
+    "What's something you used to worry about that you now know didn't matter?",
+    "What do you wish someone had told you about getting older?",
+    "What's a belief or value you hope gets passed down in your family?",
+    "If you could only tell your grandchildren one true thing, what would it be?"
+  ]
+};
+
+function pickFallbackQuestion(){
+  // Choose a period the user hasn't covered yet if possible
+  const coveredPeriods = new Set(state.memories.map(m => m.period));
+  const periods = Object.keys(FALLBACK_QUESTIONS);
+  const uncovered = periods.filter(p => !coveredPeriods.has(p));
+  const targetPeriod = uncovered.length > 0
+    ? uncovered[Math.floor(Math.random() * uncovered.length)]
+    : periods[Math.floor(Math.random() * periods.length)];
+  // Avoid reusing the same question as the current one
+  const pool = FALLBACK_QUESTIONS[targetPeriod].filter(q => q !== state.currentQuestion);
+  return pool[Math.floor(Math.random() * pool.length)] || FALLBACK_QUESTIONS[targetPeriod][0];
+}
+
+function inferPeriodFromQuestion(question){
+  if(!question) return 'Reflections & Wisdom';
+  for(const [period, qs] of Object.entries(FALLBACK_QUESTIONS)){
+    if(qs.includes(question)) return period;
+  }
+  return 'Reflections & Wisdom';
+}
+
+function autoTitleFromAnswer(answer){
+  if(!answer) return 'A memory';
+  // Take first meaningful clause, cap at ~6 words
+  const cleaned = answer.replace(/\s+/g, ' ').trim();
+  const firstSentence = cleaned.split(/[.!?]/)[0];
+  const words = firstSentence.split(' ').slice(0, 6).join(' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+async function getNextQuestion(){
+  const covered = state.memories.map(m => `${m.period}: ${m.title}`).join('; ') || 'nothing yet';
+  const sys = `You are Lineage, a warm and skilled oral history interviewer helping ${state.profile.name}, an older adult, record their life stories for their family. Ask exactly ONE thoughtful, specific, sensory question about a part of their life not yet covered. Avoid yes/no questions and avoid vague prompts like "tell me about your childhood" - instead ask about a specific object, smell, room, person, or moment. Topics already covered: ${covered}. Output ONLY valid JSON, nothing else: {"question": "..."}`;
+  try{
+    const text = await callClaude(sys, "Ask the next question.");
+    const json = extractJSON(text);
+    if(json && json.question) return json.question;
+  }catch(e){ /* fall through to offline bank */ }
+  return pickFallbackQuestion();
+}
+
+async function processBuffer(clarificationRound){
+  const transcript = state.buffer.map(b => `Q: ${b.q}\nA: ${b.a}`).join('\n\n');
+  const periodList = PERIODS.join(', ');
+  let sys = `You are Lineage, a warm oral history interviewer continuing a conversation with ${state.profile.name}. Conversation so far about this particular story:\n${transcript}\n\nDecide one of two things:\n1) If there is one specific, natural follow-up detail worth asking about (a person, place, or feeling mentioned but unexplored) and the story would clearly benefit from one more exchange, ask ONE natural, warm follow-up question.\n2) Otherwise, the story is ready to save. Write a short title (under 6 words), pick exactly one period from this list: [${periodList}], and write a polished narrative version of the story in ${state.profile.name}'s own voice - first person, natural, preserving their actual phrasing and word choices, only cleaning up filler words and repetition. Do not invent details they did not say. If it's genuinely unclear which rough time period of life this happened in, set needs_clarification to true and write one short, polite, natural clarifying question (like "About how old were you then?"); otherwise set it false.`;
+  if(clarificationRound){
+    sys += `\n\nThis is the clarification round - you already asked for the time period and now have the answer. You MUST return action "complete" with needs_clarification set to false this time, using the clarification to choose the right period.`;
+  }
+  sys += `\n\nOutput ONLY valid JSON, nothing else, in exactly one of these shapes:\n{"action":"followup","question":"..."}\nor\n{"action":"complete","title":"...","period":"...","story":"...","needs_clarification":false}\nor\n{"action":"complete","title":"...","period":"...","story":"...","needs_clarification":true,"clarifying_question":"..."}`;
+  try{
+    const text = await callClaude(sys, "Decide and respond now.");
+    const parsed = extractJSON(text);
+    if(parsed && parsed.action) return parsed;
+  }catch(e){ /* fall through to offline completion */ }
+  // Offline fallback: combine all answers as the story, infer period from the original question
+  const story = state.buffer.map(b => b.a).join('\n\n');
+  const firstQuestion = state.buffer[0] && state.buffer[0].q;
+  const period = inferPeriodFromQuestion(firstQuestion);
+  const title = autoTitleFromAnswer(state.buffer[0] && state.buffer[0].a);
+  return { action: 'complete', title, period, story, needs_clarification: false };
+}
+
+async function getPhotoCaption(dataUrl, contextTitle, contextStory){
+  const sys = `A family is adding a photo to a memory titled "${contextTitle}" with this story: ${(contextStory||'').slice(0,300)}. Write ONE warm, specific caption under 18 words describing what's likely happening in the photo, third person, suitable for a family timeline. Output ONLY JSON: {"caption":"..."}`;
+  try{
+    const text = await callClaude(sys, "Caption this photo.", dataUrl);
+    const json = extractJSON(text);
+    return json && json.caption ? json.caption : "A cherished moment.";
+  }catch(e){ return "A cherished moment."; }
+}
+
+async function generateLegacyLetter(audience){
+  const memories = state.memories
+    .slice()
+    .sort((a,b)=>a.createdAt-b.createdAt)
+    .map((m, index) => {
+      const transcript = (m.transcript || [])
+        .map(turn => `Question: ${turn.q || ''}\nAnswer: ${turn.a || ''}`)
+        .join('\n');
+      return `Memory ${index + 1}\nTitle: ${m.title || 'Untitled'}\nPeriod: ${m.period || 'General Memories'}\nStory: ${m.story || ''}\nOriginal voice notes:\n${transcript}`;
+    })
+    .join('\n\n---\n\n');
+  const sys = `You are Lineage, a careful family memoir assistant. Write a warm first-person legacy letter from ${state.profile.name} to ${audience}. Use ONLY details found in the saved memories. Do not invent names, places, events, relationships, dates, feelings, beliefs, or advice that are not supported by the memories. Preserve the storyteller's voice, phrasing, values, and emotional tone. If a detail is uncertain, leave it out. The letter should feel personal, intimate, and natural, not formal or generic. Output ONLY valid JSON: {"letter":"..."}`;
+  try{
+    const text = await callClaude(sys, memories);
+    const json = extractJSON(text);
+    if(json && json.letter) return json.letter;
+  }catch(e){ /* fall through to offline letter builder */ }
+  return buildOfflineLegacyLetter(audience);
+}
+
+function buildOfflineLegacyLetter(audience){
+  const name = state.profile && state.profile.name ? state.profile.name : 'Your storyteller';
+  const sorted = state.memories.slice().sort((a,b)=>a.createdAt-b.createdAt);
+  if(sorted.length === 0){
+    return `Dear ${audience},\n\nThis letter will grow with every memory I record. Once a few stories have been saved, Lineage will weave them together into a letter in my own voice.\n\nWith love,\n${name}`;
+  }
+
+  const wisdomLines = [];
+  sorted.forEach(m => {
+    const ins = m.wisdom && m.wisdom.insights;
+    if(!ins) return;
+    if(ins.lifeLesson) wisdomLines.push(ins.lifeLesson);
+    if(ins.futureAdvice) wisdomLines.push(ins.futureAdvice);
+  });
+
+  const opening = `Dear ${audience},\n\nI wanted to write this down for you while I still remember it the way it actually felt.`;
+
+  const memoryParagraphs = sorted.slice(0, 4).map(m => {
+    // Grab the first 2-3 sentences of each story
+    const sentences = (m.story || '').split(/(?<=[.!?])\s+/).filter(Boolean);
+    const summary = sentences.slice(0, 2).join(' ');
+    return summary;
+  }).filter(Boolean);
+
+  const middle = memoryParagraphs.length
+    ? `\n\n` + memoryParagraphs.join('\n\n')
+    : '';
+
+  const wisdomUnique = [...new Set(wisdomLines)].slice(0, 3);
+  const closing = wisdomUnique.length
+    ? `\n\nIf there is anything I want you to take from these stories, it is this. ${wisdomUnique.join(' ')}`
+    : '';
+
+  const signoff = `\n\nI love you. I am proud of you. Carry these stories with you.\n\n${name}`;
+
+  return opening + middle + closing + signoff;
+}
+
+const LIFE_CHAPTERS = [
+  {
+    key: 'childhood',
+    title: 'Childhood Adventures',
+    why: 'Early memories often carry the places, people, games, and small moments that shaped a whole life.',
+    terms: ['childhood', 'child', 'kid', 'little', 'young', 'grew up', 'home', 'mother', 'father', 'parents', 'siblings']
+  },
+  {
+    key: 'school',
+    title: 'School Years',
+    why: 'School stories preserve friendships, teachers, turning points, and the first hints of who someone was becoming.',
+    terms: ['school', 'teacher', 'class', 'classroom', 'college', 'university', 'study', 'student', 'graduated', 'education']
+  },
+  {
+    key: 'firstJob',
+    title: 'First Job',
+    why: 'First work experiences often reveal responsibility, independence, pride, mistakes, and lessons that lasted.',
+    terms: ['first job', 'first worked', 'started working', 'boss', 'coworker', 'paycheck', 'hired', 'job']
+  },
+  {
+    key: 'marriage',
+    title: 'How You Met Your Partner',
+    why: 'Love stories help future generations understand where families began and what commitment looked like in real life.',
+    terms: ['marriage', 'married', 'wedding', 'husband', 'wife', 'spouse', 'partner', 'proposed']
+  },
+  {
+    key: 'parenting',
+    title: 'Parenting',
+    why: 'Parenting stories preserve the tenderness, worry, humor, and hard-earned wisdom behind family life.',
+    terms: ['parent', 'parenting', 'children', 'child was born', 'baby', 'son', 'daughter', 'raised', 'motherhood', 'fatherhood']
+  },
+  {
+    key: 'immigration',
+    title: 'A Journey Between Places',
+    why: 'Stories of moving, migration, or starting over explain what was left behind and what was carried forward.',
+    terms: ['immigration', 'immigrated', 'moved to', 'came to', 'new country', 'visa', 'border', 'homeland', 'language']
+  },
+  {
+    key: 'career',
+    title: 'Career Milestones',
+    why: 'Work stories show ambition, sacrifice, resilience, and the moments that made someone proud.',
+    terms: ['career', 'promotion', 'milestone', 'work', 'business', 'company', 'profession', 'retired', 'achievement']
+  },
+  {
+    key: 'traditions',
+    title: 'Family Traditions',
+    why: 'Traditions explain what a family repeats, celebrates, cooks, sings, honors, and refuses to forget.',
+    terms: ['tradition', 'holiday', 'recipe', 'every year', 'every sunday', 'celebrated', 'gathered', 'festival', 'custom']
+  },
+  {
+    key: 'lifeLessons',
+    title: 'Advice You Wish Someone Had Given You',
+    why: 'Advice and life lessons let future generations inherit wisdom, not just facts.',
+    terms: ['lesson', 'learned', 'advice', 'wisdom', 'taught me', 'what matters', 'value', 'believe']
+  },
+  {
+    key: 'challenge',
+    title: 'A Difficult Challenge',
+    why: 'Stories of hardship reveal courage, survival, faith, forgiveness, and the strength it took to keep going.',
+    terms: ['challenge', 'hard time', 'difficult', 'loss', 'struggle', 'survived', 'afraid', 'grief', 'overcame']
+  }
+];
+
+function getAllMemoryText(){
+  return state.memories.map(memory => getMemorySearchText(memory)).join(' ').toLowerCase();
+}
+
+function scoreLifeChapter(chapter, allText){
+  return chapter.terms.reduce((score, term) => score + (allText.includes(term) ? 1 : 0), 0);
+}
+
+function getFallbackGapAnalysis(){
+  const allText = getAllMemoryText();
+  const chapters = LIFE_CHAPTERS.map(chapter => {
+    const score = scoreLifeChapter(chapter, allText);
+    return {
+      key: chapter.key,
+      title: chapter.title,
+      why: chapter.why,
+      status: score > 0 ? 'covered' : 'missing',
+      reason: score > 0 ? 'A saved memory has begun to explore this part of life.' : 'This meaningful story may still be waiting to be told.',
+      questions: fallbackQuestionsForChapter(chapter.title)
+    };
+  });
+  const missing = chapters.filter(chapter => chapter.status === 'missing').slice(0, 5);
+  const questionTargets = missing.length ? missing : chapters.slice(0, 3);
+  const questions = questionTargets.slice(0, 3).map(chapter => ({
+    chapter: chapter.title,
+    question: fallbackQuestionForChapter(chapter.title)
+  }));
+  return { chapters, questions, source: 'fallback' };
+}
+
+function fallbackQuestionForChapter(title){
+  return fallbackQuestionsForChapter(title)[0];
+}
+
+function fallbackQuestionsForChapter(title){
+  const name = state.profile && state.profile.name ? state.profile.name : 'you';
+  const questions = {
+    'Childhood Adventures': [
+      `What place from your childhood still feels vivid to you, and what did a normal day there look, sound, or smell like?`,
+      `Who was your favorite person to spend time with as a child, and what did you do together?`,
+      `What childhood adventure or small mischief still makes you smile?`
+    ],
+    'School Years': [
+      `Who was someone from your school years who shaped you, and what did they help you understand about yourself?`,
+      `What is a school-day memory that still feels clear when you think about it?`,
+      `What did you dream about becoming when you were young?`
+    ],
+    'First Job': [
+      `What do you remember about your first job - the people, the work, and how it changed the way you saw responsibility?`,
+      `What did your first paycheck or first day of work feel like?`,
+      `What lesson from early work stayed with you for the rest of your life?`
+    ],
+    'How You Met Your Partner': [
+      `How did you meet your partner, and what do you remember most about that first connection?`,
+      `When did you realize this relationship might matter deeply?`,
+      `What should future generations understand about love from your life?`
+    ],
+    'Parenting': [
+      `What did raising children teach you that you could only learn by living through it?`,
+      `What is one parenting moment that changed how you saw yourself?`,
+      `What do you hope your children or grandchildren always remember?`
+    ],
+    'A Journey Between Places': [
+      `What did it feel like to leave one place for another, and what parts of home did you carry with you?`,
+      `What was hardest about starting over somewhere new?`,
+      `What traditions, language, foods, or values helped you stay connected to where you came from?`
+    ],
+    'Career Milestones': [
+      `What career moment made you feel proud, tested, or changed, and what did it cost or teach you?`,
+      `Who helped you along the way in your working life?`,
+      `What work lesson would you want a younger family member to know?`
+    ],
+    'Family Traditions': [
+      `What family tradition should future generations keep, and what meaning sits underneath it?`,
+      `What food, holiday, song, prayer, or gathering feels most like family to you?`,
+      `Who taught you this tradition, and how did it change over time?`
+    ],
+    'Advice You Wish Someone Had Given You': [
+      `What lesson did life teach you slowly, and how would you explain it to someone younger in the family?`,
+      `What advice do you wish someone had given you earlier?`,
+      `What value has guided you when life felt uncertain?`
+    ],
+    'A Difficult Challenge': [
+      `What difficult season changed you, and what helped you keep going?`,
+      `Who showed up for you when things were hard?`,
+      `What did that challenge teach you that your family should remember?`
+    ]
+  };
+  return questions[title] || [
+    `What is one story about ${title.toLowerCase()} that your family should know?`,
+    `Who else was part of that story, and why did they matter?`,
+    `What did that experience teach you?`
+  ];
+}
+
+async function generateMemoryGapAnalysis(){
+  const fallback = getFallbackGapAnalysis();
+  if(state.memories.length === 0) return fallback;
+  const memories = state.memories
+    .slice()
+    .sort((a,b)=>a.createdAt-b.createdAt)
+    .map((memory, index) => `Memory ${index + 1}\nTitle: ${memory.title || 'Untitled'}\nPeriod: ${memory.period || 'General Memories'}\nStory: ${memory.story || ''}`)
+    .join('\n\n---\n\n');
+  const chapterList = LIFE_CHAPTERS.map(chapter => chapter.title).join(', ');
+  const sys = `You are Lineage, a careful oral-history archivist. Analyze the saved memories and identify important untold stories that may still deserve to be preserved. Consider these story opportunities: ${chapterList}. Stay grounded in the saved memories. Do not invent events or assume a story happened. Return ONLY valid JSON: {"opportunities":[{"title":"...","why":"...","status":"waiting or explored","questions":["...","...","..."]}]}. For each waiting opportunity, explain why it matters in warm human language and generate exactly 3 specific, sensory interview questions that could help preserve the story.`;
+  try{
+    const text = await callClaude(sys, memories);
+    const json = extractJSON(text);
+    if(!json) throw new Error('Untold Stories response was not valid JSON.');
+    return normalizeGapAnalysis(json, fallback);
+  }catch(e){
+    return fallback;
+  }
+}
+
+function normalizeGapAnalysis(json, fallback){
+  const opportunities = Array.isArray(json.opportunities) ? json.opportunities : [];
+  const chapters = LIFE_CHAPTERS.map(chapter => {
+    const aiItem = opportunities.find(item => cleanInsightText(item.title).toLowerCase() === chapter.title.toLowerCase());
+    const fallbackItem = fallback.chapters.find(c => c.key === chapter.key);
+    const aiQuestions = aiItem && Array.isArray(aiItem.questions)
+      ? aiItem.questions.map(cleanInsightText).filter(Boolean).slice(0, 3)
+      : [];
+    return {
+      key: chapter.key,
+      title: chapter.title,
+      why: cleanInsightText(aiItem && aiItem.why) || chapter.why,
+      status: aiItem ? (cleanInsightText(aiItem.status).toLowerCase().includes('explored') ? 'covered' : 'missing') : fallbackItem.status,
+      reason: cleanInsightText(aiItem && aiItem.why) || fallbackItem.reason,
+      questions: aiQuestions.length ? aiQuestions : fallbackQuestionsForChapter(chapter.title)
+    };
+  });
+  const waiting = chapters.filter(chapter => chapter.status === 'missing');
+  const questions = waiting
+    .slice(0, 3)
+    .map(chapter => ({ chapter: chapter.title, question: chapter.questions[0] }))
+    .filter(item => item.question);
+  while(questions.length < 3 && fallback.questions[questions.length]){
+    questions.push(fallback.questions[questions.length]);
+  }
+  return { chapters, questions: questions.slice(0, 3), source: 'ai' };
+}
+
+// ---------- navigation ----------
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('#navTabs button').forEach(b => b.classList.toggle('active', b.dataset.screen === name));
+  if(name === 'timeline') renderTimeline();
+  if(name === 'family') renderFamily();
+  if(name === 'wisdom') renderWisdomVault();
+  if(name === 'gaps') renderMemoryGaps();
+  if(name === 'legacy') renderLegacyLetter();
+  if(name === 'onboard') renderOnboard();
+  if(name === 'interview') renderArchiveStats();
+  if(name === 'settings'){
+    document.getElementById('nameDisplay').textContent = state.profile ? state.profile.name : '';
+  }
+}
+
+document.getElementById('navTabs').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  showScreen(btn.dataset.screen);
+});
+document.getElementById('settingsBtn').addEventListener('click', ()=>showScreen('settings'));
+document.getElementById('brandHome').addEventListener('click', ()=>showScreen('onboard'));
+document.getElementById('brandHome').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); showScreen('onboard'); }
+});
+
+function renderOnboard(){
+  const hasRealProfile = !!(state.profile && state.profile.name);
+  document.getElementById('onboardEyebrow').textContent = hasRealProfile ? 'Welcome back' : 'For the stories only you can tell';
+  document.getElementById('onboardSub').textContent = hasRealProfile
+    ? `Good to see you again, ${state.profile.name}. Ready to add more to your family legacy?`
+    : "Turn memories into a legacy your family can inherit.";
+  document.getElementById('onboardBody').textContent = hasRealProfile
+    ? "Every story you add becomes part of an archive your family can keep learning from."
+    : "Stories fade. Lineage preserves them — through conversation, not writing.";
+  document.getElementById('onboardFeatures').style.display = hasRealProfile ? 'none' : 'flex';
+  document.getElementById('nameInput').value = hasRealProfile ? state.profile.name : '';
+  document.getElementById('beginBtn').textContent = hasRealProfile ? 'Continue my archive' : 'Begin my archive';
+  // hide impact stats for returning users — they already know the pitch
+  const impactEl = document.getElementById('onboardImpact');
+  if(impactEl) impactEl.style.display = hasRealProfile ? 'none' : 'block';
+}
+
+// ---------- text size ----------
+function applyTextScale(){
+  document.documentElement.style.setProperty('--r-scale', state.settings.textScale);
+  document.getElementById('largeTextToggle').checked = state.settings.textScale > 1;
+}
+document.getElementById('textLarger').addEventListener('click', ()=>{
+  state.settings.textScale = Math.min(1.35, (state.settings.textScale||1) + 0.1);
+  applyTextScale(); saveSettings();
+});
+document.getElementById('textSmaller').addEventListener('click', ()=>{
+  state.settings.textScale = Math.max(0.9, (state.settings.textScale||1) - 0.1);
+  applyTextScale(); saveSettings();
+});
+document.getElementById('largeTextToggle').addEventListener('change', e=>{
+  state.settings.textScale = e.target.checked ? 1.25 : 1;
+  applyTextScale(); saveSettings();
+});
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('This clears every story, photo, and comment from this device. Continue?')) return;
+  const keys = ['lineage:profile','lineage:memories','lineage:comments','lineage:familyQuestions','lineage:settings','lineage:demoVersion'];
+  for(const key of keys){
+    try{
+      if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.delete === 'function'){
+        await window.storage.delete(key);
+      }
+    }catch(e){}
+    try{ localStorage.removeItem(key); }catch(e){}
+  }
+  state = { profile:null, memories:[], comments:{}, familyQuestions:[], settings:{textScale:1}, currentQuestion:null, currentFamilyQuestionId:null, buffer:[], clarificationPending:false, recognition:null, isRecording:false };
+  document.getElementById('topHeader').style.display='none';
+  showScreen('onboard');
+});
+
+// ---------- onboarding ----------
+document.getElementById('beginBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name){ document.getElementById('nameInput').focus(); return; }
+  state.profile = { name, createdAt: Date.now() };
+  await saveProfile();
+  document.getElementById('topHeader').style.display='flex';
+  showScreen('interview');
+  startInterviewLoop();
+  checkApiAvailability();
+  startTour();
+});
+
+// ---------- interview ----------
+let micSupported = false, recognition = null;
+function setupSpeech(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return;
+  try{
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    micSupported = true;
+  }catch(e){ micSupported = false; }
+}
+setupSpeech();
+
+async function startInterviewLoop(){
+  renderInterviewLoading("Lineage is thinking of a question...");
+  try{
+    state.currentQuestion = await getNextQuestion();
+  }catch(e){
+    state.currentQuestion = pickFallbackQuestion();
+  }
+  state.currentFamilyQuestionId = null;
+  state.buffer = [];
+  state.clarificationPending = false;
+  renderInterviewQuestion();
+}
+
+function getOpenFamilyQuestions(){
+  return (state.familyQuestions || [])
+    .filter(q => q.status !== 'answered')
+    .sort((a,b) => a.createdAt - b.createdAt);
+}
+
+function renderInterviewLoading(msg){
+  document.getElementById('interviewCard').innerHTML = `<div class="loading-line"><span class="dot"></span><span class="dot"></span><span class="dot"></span> ${msg}</div>`;
+}
+
+function renderInterviewQuestion(){
+  const card = document.getElementById('interviewCard');
+  const isFollowup = state.buffer.length > 0 && !state.clarificationPending;
+  const openQuestions = !isFollowup && !state.clarificationPending ? getOpenFamilyQuestions() : [];
+  const activeFamilyQuestion = state.currentFamilyQuestionId
+    ? state.familyQuestions.find(q => q.id === state.currentFamilyQuestionId)
+    : null;
+
+  // progress: rough estimate of story completion based on buffer depth
+  const progressPct = state.clarificationPending ? 90 : Math.min(80, state.buffer.length * 30);
+  const progressLabel = state.buffer.length === 0 ? 'Start sharing' : state.buffer.length === 1 ? 'Building the story' : 'Almost ready to save';
+
+  card.innerHTML = `
+    ${progressPct > 0 ? `
+      <div class="interview-progress">
+        <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+        <span class="progress-label">${progressLabel}</span>
+      </div>` : ''}
+    ${openQuestions.length ? `
+      <div class="family-question-picker">
+        <div class="label">Family Connections</div>
+        <div style="color:var(--ink-soft);font-size:0.9rem;margin-top:3px;">Choose a question from family, or answer Lineage's question below.</div>
+        <div class="family-question-actions">
+          ${openQuestions.slice(0,3).map(q => `<button class="btn outline small" data-pick-family-question="${q.id}">${escapeHtml(truncate(q.text, 72))}</button>`).join('')}
+        </div>
+      </div>
+    ` : ''}
+    ${state.clarificationPending ? '<span class="followup-chip">One quick detail</span>' : (isFollowup ? '<span class="followup-chip">Continuing this story</span>' : '<div class="label q-eyebrow">Lineage asks</div>')}
+    ${activeFamilyQuestion ? `<span class="followup-chip">Question from ${escapeHtml(activeFamilyQuestion.who || 'Family')}</span>` : ''}
+    <div class="question-text">${escapeHtml(state.currentQuestion)}</div>
+    <textarea class="answer" id="answerBox" placeholder="Type your answer here, or tap the mic to speak..." autofocus></textarea>
+    <div class="answer-footer">
+      <span class="word-count" id="wordCount">0 words</span>
+    </div>
+    <div class="interview-actions">
+      <div class="mic-row">
+        <button class="mic-btn" id="micBtn" title="Speak your answer" ${micSupported ? '' : 'style="display:none;"'}>Mic</button>
+        <span class="mic-hint" id="micHint">${micSupported ? 'Tap to speak, or just type.' : ''}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span class="kbd-hint"><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">↵</kbd> to save</span>
+        <button class="btn outline small" id="skipBtn">Ask something else</button>
+        <button class="btn" id="saveAnswerBtn">Save my answer</button>
+      </div>
+    </div>
+  `;
+  // word count live update
+  const answerBox = document.getElementById('answerBox');
+  const wordCountEl = document.getElementById('wordCount');
+  answerBox.addEventListener('input', ()=>{
+    const words = answerBox.value.trim().split(/\s+/).filter(Boolean).length;
+    wordCountEl.textContent = `${words} word${words===1?'':'s'}`;
+  });
+  // keyboard shortcut Ctrl+Enter / Cmd+Enter
+  answerBox.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+      e.preventDefault();
+      onSaveAnswer();
+    }
+  });
+  document.getElementById('saveAnswerBtn').addEventListener('click', onSaveAnswer);
+  document.getElementById('skipBtn').addEventListener('click', startInterviewLoop);
+  document.querySelectorAll('[data-pick-family-question]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      chooseFamilyQuestion(btn.dataset.pickFamilyQuestion);
+    });
+  });
+  const micBtn = document.getElementById('micBtn');
+  if(micBtn) micBtn.addEventListener('click', toggleMic);
+}
+
+function chooseFamilyQuestion(questionId){
+  const question = state.familyQuestions.find(q => q.id === questionId);
+  if(!question) return;
+  state.currentFamilyQuestionId = question.id;
+  state.currentQuestion = question.text;
+  state.buffer = [];
+  state.clarificationPending = false;
+  renderInterviewQuestion();
+}
+
+function toggleMic(){
+  if(!recognition) return;
+  const micBtn = document.getElementById('micBtn');
+  const hint = document.getElementById('micHint');
+  if(state.isRecording){
+    recognition.stop();
+    return;
+  }
+  let finalText = document.getElementById('answerBox').value;
+  recognition.onresult = (event)=>{
+    let interim = '';
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      if(event.results[i].isFinal){ finalText += (finalText?' ':'') + event.results[i][0].transcript.trim(); }
+      else{ interim += event.results[i][0].transcript; }
+    }
+    document.getElementById('answerBox').value = (finalText + ' ' + interim).trim();
+  };
+  recognition.onerror = ()=>{
+    hint.textContent = "Voice input wasn't available just then - typing works great too.";
+    state.isRecording = false;
+    micBtn.classList.remove('recording');
+  };
+  recognition.onend = ()=>{
+    state.isRecording = false;
+    micBtn.classList.remove('recording');
+    hint.textContent = 'Tap the mic to speak, or just type.';
+  };
+  try{
+    recognition.start();
+    state.isRecording = true;
+    micBtn.classList.add('recording');
+    hint.textContent = 'Listening...';
+  }catch(e){
+    hint.textContent = "Voice input isn't available in this browser - typing works great too.";
+  }
+}
+
+async function onSaveAnswer(){
+  const box = document.getElementById('answerBox');
+  const answer = box.value.trim();
+  if(!answer){ box.focus(); return; }
+  if(state.isRecording && recognition){ recognition.stop(); }
+
+  if(state.clarificationPending){
+    state.buffer.push({q: state.currentQuestion, a: answer});
+    renderInterviewLoading("Putting it all together...");
+    let result;
+    try{ result = await processBuffer(true); }catch(e){ result = null; }
+    finalizeMemory(result);
+    return;
+  }
+
+  state.buffer.push({q: state.currentQuestion, a: answer});
+  renderInterviewLoading("Lineage is listening...");
+  let result;
+  try{ result = await processBuffer(false); }catch(e){ result = null; }
+  if(!result){
+    // graceful fallback: just save as-is under General Memories
+    finalizeMemory({action:'complete', title:'A Memory', period:'General Memories', story:answer, needs_clarification:false});
+    return;
+  }
+  if(result.action === 'followup' && result.question){
+    state.currentQuestion = result.question;
+    renderInterviewQuestion();
+    return;
+  }
+  if(result.needs_clarification && result.clarifying_question){
+    state.clarificationPending = true;
+    state.currentQuestion = result.clarifying_question;
+    state._pendingComplete = result;
+    renderInterviewQuestion();
+    return;
+  }
+  finalizeMemory(result);
+}
+
+async function finalizeMemory(result){
+  const base = result || state._pendingComplete || {title:'A Memory', period:'General Memories', story: state.buffer.map(b=>b.a).join(' ')};
+  const memory = {
+    id: 'mem_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    title: base.title || 'A Memory',
+    period: PERIODS.includes(base.period) ? base.period : 'General Memories',
+    story: base.story || '',
+    transcript: state.buffer.slice(),
+    photos: [],
+    privacy: 'shared',
+    createdAt: Date.now()
+  };
+  state.memories.unshift(memory);
+  if(state.currentFamilyQuestionId){
+    const familyQuestion = state.familyQuestions.find(q => q.id === state.currentFamilyQuestionId);
+    if(familyQuestion){
+      familyQuestion.status = 'answered';
+      familyQuestion.answeredMemoryId = memory.id;
+      familyQuestion.answeredAt = Date.now();
+      await saveFamilyQuestions();
+    }
+  }
+  await saveMemories();
+  analyzeNewMemoryInBackground(memory);
+  state._pendingComplete = null;
+  state.currentFamilyQuestionId = null;
+
+  // confetti on first real memory save
+  const realMemories = state.memories.filter(m => !m.id.startsWith('demo_'));
+  if(realMemories.length === 1) launchConfetti();
+
+  renderArchiveStats();
+
+  const card = document.getElementById('interviewCard');
+  card.innerHTML = `
+    <div class="saved-toast">
+      <div class="label">Saved to ${escapeHtml(memory.period)}</div>
+      <div class="story-title">${escapeHtml(memory.title)}</div>
+      <div style="opacity:0.9;font-size:0.95rem;">"${escapeHtml(truncate(memory.story, 160))}"</div>
+    </div>
+    <div style="margin-top:18px;text-align:center;">
+      <button class="btn" id="continueBtn">Tell another story</button>
+    </div>
+  `;
+  document.getElementById('continueBtn').addEventListener('click', startInterviewLoop);
+}
+
+function truncate(s, n){ return s.length > n ? s.slice(0,n)+'...' : s; }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; }
+
+// ---------- confetti ----------
+function launchConfetti(){
+  const canvas = document.getElementById('confettiCanvas');
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#B08D45','#1F3D2E','#D4B876','#A4543A','#2C5440','#FBF6E9'];
+  const pieces = Array.from({length:90}, ()=>({
+    x: Math.random()*canvas.width, y: -10,
+    r: Math.random()*6+3,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    vx: (Math.random()-0.5)*4, vy: Math.random()*3+2,
+    rot: Math.random()*360, spin: (Math.random()-0.5)*8,
+    shape: Math.random() > 0.5 ? 'rect' : 'circle'
+  }));
+  let frame;
+  let t = 0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    t++;
+    let alive = false;
+    pieces.forEach(p=>{
+      p.x += p.vx; p.y += p.vy + t*0.01; p.rot += p.spin;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0,1-p.y/canvas.height);
+      if(p.shape==='rect'){ ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r); }
+      else{ ctx.beginPath(); ctx.arc(0,0,p.r,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+      if(p.y < canvas.height) alive = true;
+    });
+    if(alive && t < 120){ frame = requestAnimationFrame(draw); }
+    else{ canvas.style.display='none'; cancelAnimationFrame(frame); }
+  }
+  cancelAnimationFrame(frame);
+  draw();
+}
+
+// ---------- streak ----------
+function getStreakDays(){
+  const today = new Date().toDateString();
+  const days = new Set(state.memories.map(m => new Date(m.createdAt).toDateString()));
+  let streak = 0;
+  let d = new Date();
+  while(days.has(d.toDateString())){ streak++; d.setDate(d.getDate()-1); }
+  return streak;
+}
+
+// ---------- archive stats bar ----------
+function renderArchiveStats(){
+  const bar = document.getElementById('archiveStatsBar');
+  if(!bar) return;
+  const name = state.profile && state.profile.name ? state.profile.name : '';
+  const count = state.memories.length;
+  const streak = getStreakDays();
+  const wisdom = state.memories.filter(m=>m.wisdom && m.wisdom.insights).length;
+  const answered = (state.familyQuestions||[]).filter(q=>q.status==='answered').length;
+
+  const greeting = document.getElementById('interviewGreeting');
+  const headline = document.getElementById('interviewHeadline');
+  const streakSlot = document.getElementById('streakBadgeSlot');
+  if(greeting) greeting.textContent = `Welcome back, ${name}`;
+  if(headline) headline.textContent = count === 0 ? 'What story do you want to preserve today?' : `${count} memor${count===1?'y':'ies'} kept — keep going.`;
+  if(streakSlot && streak > 0){
+    streakSlot.innerHTML = `<span class="streak-badge">🔥 ${streak} day streak</span>`;
+  }
+
+  if(count === 0){ bar.innerHTML=''; return; }
+  bar.innerHTML = `
+    <div class="archive-stats">
+      <div class="archive-stat"><div class="s-num">${count}</div><div class="s-label">Stories</div></div>
+      <div class="archive-stat"><div class="s-num">${wisdom}</div><div class="s-label">Wisdom entries</div></div>
+      <div class="archive-stat"><div class="s-num">${answered}</div><div class="s-label">Questions answered</div></div>
+      ${streak > 0 ? `<div class="archive-stat"><div class="s-num">${streak}</div><div class="s-label">Day streak 🔥</div></div>` : ''}
+    </div>
+  `;
+}
+
+// ---------- export all stories ----------
+function exportAllStories(){
+  if(state.memories.length === 0) return;
+  const name = state.profile && state.profile.name ? state.profile.name : 'Storyteller';
+  const lines = [`LINEAGE — Archive of ${name}`, `Exported ${new Date().toLocaleDateString()}`, `${'='.repeat(50)}\n`];
+  state.memories.slice().sort((a,b)=>a.createdAt-b.createdAt).forEach((m,i)=>{
+    lines.push(`Memory ${i+1}: ${m.title}`);
+    lines.push(`Period: ${m.period}`);
+    lines.push(`Date: ${new Date(m.createdAt).toLocaleDateString()}`);
+    lines.push('');
+    lines.push(m.story);
+    if(m.wisdom && m.wisdom.insights){
+      const ins = m.wisdom.insights;
+      if(ins.lifeLesson) lines.push(`\nLife Lesson: ${ins.lifeLesson}`);
+      if(ins.futureAdvice) lines.push(`Advice: ${ins.futureAdvice}`);
+      if(ins.familyTradition) lines.push(`Tradition: ${ins.familyTradition}`);
+    }
+    lines.push(`\n${'-'.repeat(40)}\n`);
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `lineage-archive-${name.toLowerCase().replace(/\s+/g,'-')}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---------- share / copy link ----------
+function shareApp(){
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn = document.getElementById('shareAppBtn');
+    if(btn){ const orig=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent=orig, 2000); }
+  }).catch(()=>{
+    prompt('Copy this link to share Lineage:', url);
+  });
+}
+
+// ---------- timeline search state ----------
+let timelineSearchQuery = '';
+let timelinePeriodFilter = '';
+
+function renderTimeline(){
+  const container = document.getElementById('timelineContent');
+  document.getElementById('memoryCountLabel').textContent = state.memories.length ? `${state.memories.length} memor${state.memories.length===1?'y':'ies'} kept` : '';
+
+  // render period filter pills
+  const filtersEl = document.getElementById('periodFilters');
+  if(filtersEl){
+    const activePeriods = PERIODS.filter(p => state.memories.some(m=>m.period===p));
+    filtersEl.innerHTML = activePeriods.length > 1
+      ? `<button class="period-filter-btn ${!timelinePeriodFilter ? 'active' : ''}" data-period="">All</button>`
+        + activePeriods.map(p=>`<button class="period-filter-btn ${timelinePeriodFilter===p?'active':''}" data-period="${escapeHtml(p)}">${escapeHtml(p)}</button>`).join('')
+      : '';
+    filtersEl.querySelectorAll('.period-filter-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        timelinePeriodFilter = btn.dataset.period;
+        renderTimeline();
+      });
+    });
+  }
+
+  if(state.memories.length === 0){
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📖</div><h3 style="margin-bottom:8px;">No memories yet</h3><p>Head to "Tell a Story" and answer your first question — it will appear here.</p></div>`;
+    return;
+  }
+
+  // show skeletons while filtering
+  if(!timelineSearchQuery && !timelinePeriodFilter && container.innerHTML === ''){
+    container.innerHTML = renderSkeletonCards(3);
+  }
+
+  // filter memories
+  const q = timelineSearchQuery.toLowerCase().trim();
+  const filteredMemories = state.memories.filter(m=>{
+    const matchesPeriod = !timelinePeriodFilter || m.period === timelinePeriodFilter;
+    const matchesSearch = !q || `${m.title} ${m.story} ${m.period}`.toLowerCase().includes(q);
+    return matchesPeriod && matchesSearch;
+  });
+
+  const searchLabel = document.getElementById('searchResultsLabel');
+  if(searchLabel){
+    if(q || timelinePeriodFilter){
+      searchLabel.style.display = 'block';
+      searchLabel.textContent = `${filteredMemories.length} result${filteredMemories.length===1?'':'s'} found`;
+    } else {
+      searchLabel.style.display = 'none';
+    }
+  }
+
+  if(filteredMemories.length === 0){
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3 style="margin-bottom:8px;">No matches</h3><p>Try a different search or clear the filter.</p></div>`;
+    return;
+  }
+
+  let html = `<div class="timeline-wrap"><div class="thread"></div>`;
+  PERIODS.forEach(period=>{
+    const items = filteredMemories.filter(m=>m.period===period).sort((a,b)=>a.createdAt-b.createdAt);
+    if(items.length === 0) return;
+    html += `<div class="period-block"><div class="period-tab"><h2>${escapeHtml(period)}</h2><span class="period-count">${items.length} ${items.length===1?'entry':'entries'}</span></div>`;
+    items.forEach(m=> html += renderMemoryCard(m));
+    html += `</div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+  wireMemoryCards();
+}
+
+// wire search input (debounced)
+let searchDebounce;
+document.getElementById('timelineSearch').addEventListener('input', function(){
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(()=>{
+    timelineSearchQuery = this.value;
+    renderTimeline();
+  }, 250);
+});
+
+function renderMemoryCard(m){
+  const commentCount = (state.comments[m.id]||[]).length;
+  return `
+  <div class="memory-card" id="memory-${m.id}" data-id="${m.id}">
+    <div class="memory-head" data-toggle="${m.id}">
+      <div>
+        <div class="memory-title">${escapeHtml(m.title)}</div>
+        <div class="memory-meta">${new Date(m.createdAt).toLocaleDateString()} ${commentCount ? ' - ' + commentCount + ' family note' + (commentCount>1?'s':'') : ''}</div>
+      </div>
+      <span class="privacy-pill ${m.privacy==='shared'?'shared':''}" data-privacy="${m.id}">${m.privacy==='shared' ? 'Shared' : 'Private'}</span>
+    </div>
+    <div class="memory-body" id="body-${m.id}">
+      <div class="memory-story">${escapeHtml(m.story)}</div>
+      <div class="photo-grid">
+        ${m.photos.map((p,i)=>`
+          <div class="photo-item">
+            <img src="${p.dataUrl}" alt="${escapeHtml(p.caption)}" />
+            <input class="caption-input" data-photo="${m.id}|${i}" value="${escapeHtml(p.caption)}" />
+          </div>`).join('')}
+        <label class="photo-upload-label">+ Add a photo
+          <input type="file" accept="image/*" style="display:none;" data-upload="${m.id}" />
+        </label>
+      </div>
+      <div class="memory-controls">
+        <button class="btn outline small" data-privacy-toggle="${m.id}">${m.privacy==='shared' ? 'Make private' : 'Share with family'}</button>
+      </div>
+      <div class="comments-box">
+        <div class="label" style="margin-bottom:8px;">Family notes</div>
+        ${(state.comments[m.id]||[]).map(c=>`<div class="comment"><div class="who">${escapeHtml(c.who)}</div>${escapeHtml(c.text)}</div>`).join('') || '<div style="color:var(--ink-soft);font-size:0.88rem;">No notes yet.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireMemoryCards(){
+  document.querySelectorAll('[data-toggle]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const id = el.dataset.toggle;
+      document.getElementById('body-'+id).classList.toggle('open');
+    });
+  });
+  document.querySelectorAll('[data-privacy-toggle]').forEach(el=>{
+    el.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = el.dataset.privacyToggle;
+      const mem = state.memories.find(m=>m.id===id);
+      mem.privacy = mem.privacy === 'shared' ? 'private' : 'shared';
+      await saveMemories();
+      renderTimeline();
+      const body = document.getElementById('body-'+id);
+      if(body) body.classList.add('open');
+    });
+  });
+  document.querySelectorAll('[data-upload]').forEach(el=>{
+    el.addEventListener('change', (e)=> handlePhotoUpload(e, el.dataset.upload));
+  });
+  document.querySelectorAll('[data-photo]').forEach(el=>{
+    let captionDebounce;
+    el.addEventListener('input', ()=>{
+      clearTimeout(captionDebounce);
+      captionDebounce = setTimeout(async ()=>{
+        const [memId, idx] = el.dataset.photo.split('|');
+        const mem = state.memories.find(m=>m.id===memId);
+        if(mem && mem.photos[parseInt(idx)]) mem.photos[parseInt(idx)].caption = el.value;
+        await saveMemories();
+      }, 600);
+    });
+  });
+}
+
+function compressImage(file, maxWidth, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxWidth / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePhotoUpload(e, memId){
+  const file = e.target.files[0];
+  if(!file) return;
+  let dataUrl;
+  try{ dataUrl = await compressImage(file, 900, 0.72); }catch(err){ return; }
+  const mem = state.memories.find(m=>m.id===memId);
+  const photo = { id: 'p_'+Date.now(), dataUrl, caption: 'Adding a caption...' };
+  mem.photos.push(photo);
+  await saveMemories();
+  renderTimeline();
+  const body = document.getElementById('body-'+memId);
+  if(body) body.classList.add('open');
+  try{
+    const caption = await getPhotoCaption(dataUrl, mem.title, mem.story);
+    photo.caption = caption;
+    await saveMemories();
+    renderTimeline();
+    const body2 = document.getElementById('body-'+memId);
+    if(body2) body2.classList.add('open');
+  }catch(err){
+    photo.caption = 'A cherished moment.';
+    await saveMemories();
+  }
+}
+
+// ---------- family wisdom book ----------
+const WISDOM_SCHEMA_VERSION = 2;
+const WISDOM_CATEGORIES = [
+  {
+    key: 'lifeLesson',
+    title: 'Life Lessons',
+    terms: ['learned', 'lesson', 'taught me', 'realized', 'understood', 'found out', 'showed me', 'made me see', 'never forgot', 'what matters']
+  },
+  {
+    key: 'futureAdvice',
+    title: 'Advice for Future Generations',
+    terms: ['advice', 'remember to', 'try to', 'make sure', 'do not', "don't", 'always', 'never', 'should', 'take care', 'be patient']
+  },
+  {
+    key: 'familyTradition',
+    title: 'Family Tradition',
+    terms: ['tradition', 'every year', 'every sunday', 'holiday', 'christmas', 'thanksgiving', 'birthday', 'recipe', 'cooked', 'gathered', 'sang', 'prayed']
+  },
+  {
+    key: 'personalValue',
+    title: 'Core Values',
+    terms: ['family', 'faith', 'honest', 'honesty', 'kind', 'kindness', 'work hard', 'respect', 'courage', 'love', 'loyal', 'grateful', 'grace']
+  }
+];
+let wisdomRenderToken = 0;
+
+function getMemorySearchText(memory){
+  const transcript = (memory.transcript || [])
+    .map(turn => `${turn.q || ''} ${turn.a || ''}`)
+    .join(' ');
+  return `${memory.title || ''} ${memory.period || ''} ${memory.story || ''} ${transcript}`;
+}
+
+function cleanInsightText(value){
+  if(Array.isArray(value)) value = value.find(Boolean) || '';
+  if(value && typeof value === 'object') value = value.text || value.insight || '';
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if(!text) return '';
+  if(/^(none|n\/a|not mentioned|not applicable|unclear)$/i.test(text)) return '';
+  return text.length > 260 ? text.slice(0, 257).trim() + '...' : text;
+}
+
+function normalizeWisdomInsights(raw){
+  const insights = {};
+  WISDOM_CATEGORIES.forEach(category => {
+    insights[category.key] = cleanInsightText(raw && raw[category.key]);
+  });
+  return insights;
+}
+
+function splitIntoWisdomLines(text){
+  return text
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(line => line.trim())
+    .filter(line => line.length >= 28 && line.length <= 240);
+}
+
+function scoreWisdomLine(line, terms){
+  const lower = line.toLowerCase();
+  return terms.reduce((score, term) => score + (lower.includes(term) ? 1 : 0), 0);
+}
+
+function getFallbackWisdomInsights(memory){
+  const lines = splitIntoWisdomLines(getMemorySearchText(memory));
+  const insights = {};
+  WISDOM_CATEGORIES.forEach(category => {
+    const best = lines
+      .map(line => ({ line, score: scoreWisdomLine(line, category.terms) }))
+      .filter(item => item.score > 0)
+      .sort((a,b) => b.score - a.score)[0];
+    insights[category.key] = best ? best.line : '';
+  });
+  return insights;
+}
+
+async function extractWisdomInsights(memory){
+  const storyteller = state.profile && state.profile.name ? state.profile.name : 'the storyteller';
+  const sys = `You are Lineage, an AI family archivist. Analyze one saved memory from ${storyteller} and extract concise, faithful wisdom from it. Return exactly these five fields: lifeLesson, futureAdvice, familyTradition, personalValue, culturalDetail. Each field should be one warm sentence under 28 words. Stay grounded in the memory; do not invent facts. If a category is not supported by the memory, use an empty string. Output ONLY valid JSON in this shape: {"lifeLesson":"...","futureAdvice":"...","familyTradition":"...","personalValue":"...","culturalDetail":"..."}`;
+  const userText = `Title: ${memory.title || 'Untitled'}\nPeriod: ${memory.period || 'General Memories'}\nStory:\n${memory.story || ''}\n\nOriginal interview:\n${(memory.transcript || []).map(turn => `Q: ${turn.q || ''}\nA: ${turn.a || ''}`).join('\n\n')}`;
+  try{
+    const text = await callClaude(sys, userText);
+    const json = extractJSON(text);
+    if(!json) throw new Error('Wisdom extraction returned invalid JSON.');
+    return {
+      version: WISDOM_SCHEMA_VERSION,
+      analyzedAt: Date.now(),
+      source: 'ai',
+      insights: normalizeWisdomInsights(json)
+    };
+  }catch(e){
+    return {
+      version: WISDOM_SCHEMA_VERSION,
+      analyzedAt: Date.now(),
+      source: 'fallback',
+      insights: getFallbackWisdomInsights(memory)
+    };
+  }
+}
+
+function wisdomNeedsAnalysis(memory){
+  return !memory.wisdom || memory.wisdom.version !== WISDOM_SCHEMA_VERSION || !memory.wisdom.insights;
+}
+
+async function ensureMemoryWisdom(memory){
+  if(!wisdomNeedsAnalysis(memory)) return false;
+  memory.wisdom = await extractWisdomInsights(memory);
+  return true;
+}
+
+function analyzeNewMemoryInBackground(memory){
+  ensureMemoryWisdom(memory).then(async changed => {
+    if(changed) await saveMemories();
+  }).catch(console.error);
+}
+
+async function analyzeMissingWisdom(memories, token){
+  let changed = false;
+  for(const memory of memories){
+    changed = await ensureMemoryWisdom(memory) || changed;
+  }
+  if(changed) await saveMemories();
+  const wisdomScreen = document.getElementById('screen-wisdom');
+  if(token === wisdomRenderToken && wisdomScreen.classList.contains('active')){
+    renderWisdomVault();
+  }
+}
+
+function analyzeWisdomVault(){
+  const grouped = WISDOM_CATEGORIES.reduce((acc, category) => {
+    acc[category.key] = [];
+    return acc;
+  }, {});
+
+  state.memories.forEach(memory => {
+    WISDOM_CATEGORIES.forEach(category => {
+      const text = cleanInsightText(memory.wisdom && memory.wisdom.insights && memory.wisdom.insights[category.key]);
+      if(text) grouped[category.key].push({ memory, text });
+    });
+  });
+
+  Object.keys(grouped).forEach(key => {
+    const seen = new Set();
+    grouped[key] = grouped[key]
+      .sort((a,b) => b.memory.createdAt - a.memory.createdAt)
+      .filter(item => {
+        const signature = `${item.memory.id}:${item.text.toLowerCase()}`;
+        if(seen.has(signature)) return false;
+        seen.add(signature);
+        return true;
+      });
+  });
+
+  return grouped;
+}
+
+function getWisdomBookSummary(grouped){
+  const allText = state.memories.map(m => `${m.title || ''} ${m.period || ''} ${m.story || ''}`).join(' ').toLowerCase();
+  const valueTerms = ['family','faith','kindness','honesty','work','respect','courage','love','loyalty','gratitude','patience','service'];
+  const themeTerms = ['childhood','school','work','marriage','parenting','home','tradition','food','travel','loss','hope','community','immigration'];
+  const mostCommonValues = valueTerms
+    .map(term => ({ term, count: (allText.match(new RegExp(`\\b${term}\\b`, 'g')) || []).length }))
+    .filter(item => item.count > 0)
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 5)
+    .map(item => item.term);
+  const mostDiscussedThemes = themeTerms
+    .map(term => ({ term, count: (allText.match(new RegExp(`\\b${term}\\b`, 'g')) || []).length }))
+    .filter(item => item.count > 0)
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 5)
+    .map(item => item.term);
+  const keyLifeMilestones = state.memories
+    .slice()
+    .sort((a,b)=>a.createdAt-b.createdAt)
+    .slice(0, 6)
+    .map(memory => memory.title);
+  const answeredFamilyQuestions = (state.familyQuestions || []).filter(q => q.status === 'answered').length;
+  const insightCounts = {
+    lessons: (grouped.lifeLesson || []).length,
+    traditions: (grouped.familyTradition || []).length,
+    advice: (grouped.futureAdvice || []).length,
+    values: (grouped.personalValue || []).length
+  };
+  return {
+    totalStories: state.memories.length,
+    totalInsights: Object.values(grouped).reduce((sum, items) => sum + items.length, 0),
+    answeredFamilyQuestions,
+    insightCounts,
+    legacySnapshot: {
+      values: makeSnapshotItems(grouped.personalValue, mostCommonValues),
+      traditions: makeSnapshotItems(grouped.familyTradition, mostDiscussedThemes),
+      advice: makeSnapshotItems(grouped.futureAdvice, [])
+    },
+    mostCommonValues,
+    mostDiscussedThemes,
+    keyLifeMilestones
+  };
+}
+
+function makeSnapshotItems(items, fallbackTerms){
+  const fromInsights = (items || [])
+    .map(item => cleanInsightText(item.text))
+    .filter(Boolean)
+    .slice(0, 3);
+  if(fromInsights.length) return fromInsights;
+  return fallbackTerms.slice(0, 3).map(term => term.charAt(0).toUpperCase() + term.slice(1));
+}
+
+function renderWisdomVault(){
+  const token = ++wisdomRenderToken;
+  const container = document.getElementById('wisdomContent');
+  const missing = state.memories.filter(wisdomNeedsAnalysis);
+  const grouped = analyzeWisdomVault();
+  const total = Object.values(grouped).reduce((sum, items) => sum + items.length, 0);
+  document.getElementById('wisdomCountLabel').textContent = total ? `${total} insight${total===1?'':'s'} found` : '';
+
+  if(state.memories.length === 0){
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✨</div><h3 style="margin-bottom:8px;">No Family Wisdom Book yet</h3><p>Once stories are saved, Lineage will gather lessons, advice, traditions, and values into a book for future generations.</p></div>`;
+    return;
+  }
+
+  if(missing.length && total === 0){
+    container.innerHTML = `<div style="margin-top:16px;">${renderSkeletonCards(2)}<div class="empty-state" style="margin-top:12px;"><div class="empty-icon">🔍</div><h3 style="margin-bottom:8px;">Preparing the Family Wisdom Book</h3><p>Lineage is analyzing ${missing.length} saved memor${missing.length===1?'y':'ies'} for lessons, advice, traditions, and values.</p></div></div>`;
+    analyzeMissingWisdom(missing, token);
+    return;
+  }
+
+  if(total === 0){
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🌱</div><h3 style="margin-bottom:8px;">Still gathering wisdom</h3><p>The saved memories do not clearly hold lessons, advice, traditions, or values yet. Future stories may complete the book.</p></div>`;
+    return;
+  }
+
+  const summary = getWisdomBookSummary(grouped);
+  container.innerHTML = `
+    ${renderWisdomBookCover(summary)}
+    ${renderWisdomJourney()}
+    ${renderWisdomImpactStatement()}
+    ${renderLifetimeReview(summary)}
+    ${renderLegacySnapshot(summary)}
+    <div class="wisdom-grid">
+      ${WISDOM_CATEGORIES.map(category => renderWisdomCategory(category, grouped[category.key])).join('')}
+    </div>
+    ${missing.length ? `<div class="wisdom-status">Adding ${missing.length} older memor${missing.length===1?'y':'ies'} to the Family Wisdom Book...</div>` : ''}`;
+  wireWisdomSourceLinks();
+  if(missing.length) analyzeMissingWisdom(missing, token);
+}
+
+function renderWisdomBookCover(summary){
+  const name = state.profile && state.profile.name ? state.profile.name : 'The Storyteller';
+  return `
+    <section class="book-cover" id="familyWisdomBookExport">
+      <div>
+        <div class="label">Lineage presents</div>
+        <div class="book-cover-title">Family Wisdom Book</div>
+        <div class="book-cover-name">${escapeHtml(name)}</div>
+        <div class="book-cover-subtitle">Preserving stories, values, and life lessons for future generations.</div>
+      </div>
+      <div class="book-cover-meta">
+        <div><span class="label">Total Memories</span><br>${summary.totalStories}</div>
+        <div><span class="label">Total Life Lessons</span><br>${summary.insightCounts.lessons}</div>
+        <div><span class="label">Total Traditions</span><br>${summary.insightCounts.traditions}</div>
+        <div><span class="label">Total Advice Entries</span><br>${summary.insightCounts.advice}</div>
+      </div>
+    </section>
+  `;
+}
+
+function renderWisdomJourney(){
+  return `
+    <section class="book-journey">
+      <div class="label">The Lineage journey</div>
+      <h2 class="book-section-title">How a life becomes a legacy</h2>
+      <div class="journey-steps">
+        <div class="journey-step">Stories</div>
+        <div class="journey-arrow">↓</div>
+        <div class="journey-step">Memories Preserved</div>
+        <div class="journey-arrow">↓</div>
+        <div class="journey-step">Wisdom Extracted</div>
+        <div class="journey-arrow">↓</div>
+        <div class="journey-step">Family Wisdom Book</div>
+      </div>
+    </section>
+  `;
+}
+
+function renderWisdomImpactStatement(){
+  return `
+    <section class="book-impact">
+      Most memory platforms preserve what happened.<br>
+      Lineage preserves what future generations can learn.
+    </section>
+  `;
+}
+
+function renderLifetimeReview(summary){
+  return `
+    <section class="book-review">
+      <div class="label">A Lifetime in Review</div>
+      <h2 class="book-section-title">What this archive preserves</h2>
+      <div class="review-grid">
+        <div class="review-tile"><div class="t">Most common values</div><div class="d">${escapeHtml(summary.mostCommonValues.join(', ') || 'Still emerging')}</div></div>
+        <div class="review-tile"><div class="t">Most discussed themes</div><div class="d">${escapeHtml(summary.mostDiscussedThemes.join(', ') || 'Still emerging')}</div></div>
+        <div class="review-tile"><div class="t">Most important life milestones</div><div class="d">${escapeHtml(summary.keyLifeMilestones.join(', ') || 'More stories needed')}</div></div>
+        <div class="review-tile"><div class="t">Number of stories preserved</div><div class="d">${summary.totalStories}</div></div>
+        <div class="review-tile"><div class="t">Number of family questions answered</div><div class="d">${summary.answeredFamilyQuestions}</div></div>
+      </div>
+    </section>
+  `;
+}
+
+function renderLegacySnapshot(summary){
+  return `
+    <section class="book-review">
+      <div class="label">Legacy Snapshot</div>
+      <h2 class="book-section-title">The inheritance beyond the stories</h2>
+      <div class="review-grid">
+        <div class="review-tile">
+          <div class="t">Core Values</div>
+          ${renderSnapshotList(summary.legacySnapshot.values, ['Integrity','Family','Resilience'])}
+        </div>
+        <div class="review-tile">
+          <div class="t">Traditions</div>
+          ${renderSnapshotList(summary.legacySnapshot.traditions, ['Sunday Family Gatherings','Holiday Celebrations'])}
+        </div>
+        <div class="review-tile">
+          <div class="t">Advice</div>
+          ${renderSnapshotList(summary.legacySnapshot.advice, ['Never stop learning','Keep your word'])}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderSnapshotList(items, fallback){
+  const list = (items && items.length ? items : fallback).slice(0, 3);
+  return `<ul class="snapshot-list">${list.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+}
+
+function renderWisdomCategory(category, items){
+  return `
+    <div class="memory-card wisdom-card">
+      <div class="wisdom-category-head">
+        <div class="label">${escapeHtml(category.title)}</div>
+        <span class="wisdom-category-count">${items.length} ${items.length===1?'card':'cards'}</span>
+      </div>
+      ${items.length ? `
+        <div class="wisdom-list">
+          ${items.map(item => `
+            <div class="wisdom-item">
+              <div class="wisdom-text">${escapeHtml(item.text)}</div>
+              <button class="wisdom-source-btn" data-source-memory="${escapeHtml(item.memory.id)}">Source: ${escapeHtml(item.memory.title)} - ${escapeHtml(item.memory.period)}</button>
+            </div>
+          `).join('')}
+        </div>
+      ` : `<p style="margin:8px 0 0;color:var(--ink-soft);">Nothing clear in this category yet.</p>`}
+    </div>
+  `;
+}
+
+function wireWisdomSourceLinks(){
+  document.querySelectorAll('[data-source-memory]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      jumpToMemory(btn.dataset.sourceMemory);
+    });
+  });
+}
+
+document.getElementById('generateWisdomBookBtn').addEventListener('click', ()=>{
+  showScreen('wisdom');
+  // Show user feedback if API is down and there's anything to analyze
+  const apiNoticeShown = document.getElementById('apiNotice')?.classList.contains('show');
+  const needsAnalysis = state.memories.some(m => !m.wisdom || !m.wisdom.insights);
+  if(apiNoticeShown && needsAnalysis){
+    const content = document.getElementById('wisdomContent');
+    if(content){
+      content.innerHTML = `<div class="empty-state" style="margin-top:16px;"><div class="empty-icon">⚠️</div><h3 style="margin-bottom:8px;">AI features need a connection</h3><p>The Wisdom Book uses Claude to extract lessons, traditions, values, and advice from your stories. Without the API, only previously-analyzed memories will appear here.</p></div>`;
+    }
+    return;
+  }
+  renderWisdomVault();
+});
+
+document.getElementById('exportWisdomBookBtn').addEventListener('click', ()=>{
+  const content = document.getElementById('wisdomContent');
+  if(!content || !content.innerHTML.trim()){
+    renderWisdomVault();
+  }
+  setTimeout(()=>window.print(), 100);
+});
+
+function jumpToMemory(memoryId){
+  showScreen('timeline');
+  setTimeout(()=>{
+    const card = document.querySelector(`[data-id="${memoryId}"]`);
+    const body = document.getElementById('body-'+memoryId);
+    if(body) body.classList.add('open');
+    if(card){
+      card.scrollIntoView({behavior:'smooth', block:'center'});
+      card.classList.add('memory-highlight');
+      setTimeout(()=>card.classList.remove('memory-highlight'), 1800);
+    }
+  }, 60);
+}
+
+// ---------- untold stories ----------
+async function renderMemoryGaps(){
+  const container = document.getElementById('gapContent');
+  const label = document.getElementById('gapCountLabel');
+  label.textContent = state.memories.length ? `${state.memories.length} stor${state.memories.length===1?'y':'ies'} preserved` : '';
+
+  if(state.memories.length === 0){
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🗺️</div><h3 style="margin-bottom:8px;">No stories preserved yet</h3><p>Once a few memories are saved, Lineage can help discover the important stories still waiting to be told.</p></div>`;
+    return;
+  }
+
+  const fallback = getFallbackGapAnalysis();
+  renderGapAnalysis(fallback, true);
+  const analysis = await generateMemoryGapAnalysis();
+  const gapScreen = document.getElementById('screen-gaps');
+  if(gapScreen.classList.contains('active')){
+    renderGapAnalysis(analysis, false);
+  }
+}
+
+const CHAPTER_ICONS = {
+  childhood: '🏡', school: '📚', firstJob: '💼', marriage: '💍',
+  parenting: '👶', immigration: '✈️', career: '🏆', traditions: '🕯️',
+  lifeLessons: '💡', challenge: '🌊'
+};
+let openChapterKey = null;
+
+function renderGapAnalysis(analysis, loading){
+  const container = document.getElementById('gapContent');
+  const covered = analysis.chapters.filter(c => c.status === 'covered').length;
+  const total = analysis.chapters.length;
+  const waiting = total - covered;
+  const pct = Math.round((covered / total) * 100);
+
+  document.getElementById('gapCountLabel').textContent = `${covered}/${total} chapters explored`;
+  container.innerHTML = `
+    ${loading ? `<div class="loading-line" style="margin-top:16px;"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Analyzing your stories...</div>` : ''}
+    <div class="gap-map-summary">
+      <div class="gap-stat">
+        <div class="stat-num">${covered}</div>
+        <div class="stat-label">Chapters explored</div>
+      </div>
+      <div class="gap-stat">
+        <div class="stat-num" style="color:var(--rust);">${waiting}</div>
+        <div class="stat-label">Stories still waiting</div>
+      </div>
+      <div class="gap-stat" style="flex:2;min-width:200px;">
+        <div class="stat-label" style="margin-bottom:6px;">Archive completeness</div>
+        <div class="progress-track" style="height:10px;">
+          <div class="progress-fill" style="width:${pct}%;"></div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:5px;">${pct}% of life chapters captured</div>
+      </div>
+    </div>
+    <div class="label" style="margin:18px 0 10px;">Tap any chapter to see why it matters and suggested questions</div>
+    <div class="chapter-map" id="chapterMap">
+      ${analysis.chapters.map(chapter => `
+        <div class="chapter-tile ${chapter.status}" data-chapter-key="${chapter.key}" role="button" tabindex="0" aria-expanded="${openChapterKey===chapter.key}">
+          <div class="tile-badge"></div>
+          <div class="tile-icon">${CHAPTER_ICONS[chapter.key] || '📖'}</div>
+          <div class="tile-title">${escapeHtml(chapter.title)}</div>
+          <div class="tile-status">${chapter.status === 'covered' ? '✓ Explored' : '○ Waiting'}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div id="chapterDetailSlot"></div>
+  `;
+  wireChapterMap(analysis);
+  if(openChapterKey){
+    const ch = analysis.chapters.find(c => c.key === openChapterKey);
+    if(ch) renderChapterDetail(ch);
+  }
+}
+
+function renderChapterDetail(chapter){
+  const slot = document.getElementById('chapterDetailSlot');
+  const questions = chapter.questions || fallbackQuestionsForChapter(chapter.title);
+  slot.innerHTML = `
+    <div class="chapter-detail">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <span style="font-size:2rem;">${CHAPTER_ICONS[chapter.key] || '📖'}</span>
+        <div>
+          <h2 style="font-size:1.25rem;">${escapeHtml(chapter.title)}</h2>
+          <span style="font-size:0.78rem;color:${chapter.status==='covered'?'var(--green-light)':'var(--rust)'};">
+            ${chapter.status === 'covered' ? '✓ You have stories in this chapter' : '○ Not yet captured'}
+          </span>
+        </div>
+      </div>
+      <div class="detail-why">${escapeHtml(chapter.why || chapter.reason)}</div>
+      <div class="detail-questions">
+        <div class="label" style="margin-bottom:8px;">Suggested interview questions</div>
+        <ul style="margin:0;padding:0;list-style:none;">
+          ${questions.slice(0,3).map(q => `<li>${escapeHtml(q)}</li>`).join('')}
+        </ul>
+      </div>
+      ${chapter.status === 'missing' ? `
+        <div style="margin-top:16px;">
+          <button class="btn" data-gap-topic="${escapeHtml(chapter.title)}" data-gap-question="${escapeHtml(questions[0])}">Tell this story now →</button>
+        </div>` : `
+        <div style="margin-top:14px;color:var(--ink-soft);font-size:0.88rem;">This chapter already has stories in your Timeline. You can always add more.</div>
+      `}
+    </div>
+  `;
+  wireGapQuestionActions();
+}
+
+function wireChapterMap(analysis){
+  document.querySelectorAll('.chapter-tile').forEach(tile=>{
+    const handler = ()=>{
+      const key = tile.dataset.chapterKey;
+      const ch = analysis.chapters.find(c=>c.key===key);
+      if(!ch) return;
+      if(openChapterKey === key){
+        openChapterKey = null;
+        document.getElementById('chapterDetailSlot').innerHTML = '';
+        tile.setAttribute('aria-expanded','false');
+      } else {
+        openChapterKey = key;
+        document.querySelectorAll('.chapter-tile').forEach(t=>t.setAttribute('aria-expanded','false'));
+        tile.setAttribute('aria-expanded','true');
+        renderChapterDetail(ch);
+        setTimeout(()=>document.getElementById('chapterDetailSlot').scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
+      }
+    };
+    tile.addEventListener('click', handler);
+    tile.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); handler(); } });
+  });
+}
+
+function wireGapQuestionActions(){
+  document.querySelectorAll('[data-gap-question]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const topic = btn.dataset.gapTopic || 'this untold story';
+      state.currentQuestion = `Let's preserve your story about ${topic}. ${btn.dataset.gapQuestion}`;
+      state.currentFamilyQuestionId = null;
+      state.buffer = [];
+      state.clarificationPending = false;
+      showScreen('interview');
+      renderInterviewQuestion();
+    });
+  });
+}
+
+// ---------- legacy letter ----------
+function renderLegacyLetter(){
+  const count = state.memories.length;
+  const label = document.getElementById('legacyCountLabel');
+  const note = document.getElementById('legacyNote');
+  const output = document.getElementById('legacyLetterContent');
+  const button = document.getElementById('generateLegacyBtn');
+  label.textContent = count ? `${count} memor${count===1?'y':'ies'} saved` : '';
+
+  if(count < 2){
+    button.disabled = true;
+    note.textContent = 'Save at least two memories before generating a Legacy Letter.';
+    output.innerHTML = `<div class="empty-state" style="margin-top:16px;"><div class="empty-icon">✉️</div><h3 style="margin-bottom:8px;">More memories needed</h3><p>After multiple stories are saved, Lineage can weave them into a letter for family.</p></div>`;
+    return;
+  }
+
+  button.disabled = false;
+  note.textContent = 'The letter will only use saved memories and will stay in the storyteller\'s first-person voice.';
+  if(!output.innerHTML.trim()){
+    output.innerHTML = `<div class="empty-state" style="margin-top:16px;"><div class="empty-icon">📝</div><h3 style="margin-bottom:8px;">Ready when you are</h3><p>Choose who the letter is for, then generate a draft.</p></div>`;
+  }
+}
+
+document.getElementById('generateLegacyBtn').addEventListener('click', async ()=>{
+  const button = document.getElementById('generateLegacyBtn');
+  const output = document.getElementById('legacyLetterContent');
+  const audience = document.getElementById('legacyAudience').value;
+  if(state.memories.length < 2) return;
+  button.disabled = true;
+  output.innerHTML = `<div class="loading-line" style="margin-top:16px;"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Writing the Legacy Letter...</div>`;
+  try{
+    const letter = await generateLegacyLetter(audience);
+    output.innerHTML = `
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px;">
+        <button class="btn copy small" id="copyLetterBtn">📋 Copy letter</button>
+        <span class="copy-tick" id="copyLetterTick">✓ Copied!</span>
+      </div>
+      <div class="legacy-letter-output" id="legacyLetterText">${escapeHtml(letter)}</div>
+    `;
+    document.getElementById('copyLetterBtn').addEventListener('click', ()=>{
+      navigator.clipboard.writeText(letter).then(()=>{
+        const tick = document.getElementById('copyLetterTick');
+        tick.classList.add('show');
+        setTimeout(()=>tick.classList.remove('show'), 2000);
+      });
+    });
+  }catch(e){
+    output.innerHTML = `<div class="empty-state" style="margin-top:16px;"><h3 style="margin-bottom:8px;">Could not write the letter</h3><p>Lineage could not generate a letter just then. Please try again in a moment.</p></div>`;
+  }finally{
+    button.disabled = false;
+  }
+});
+
+// ---------- Family Connections questions ----------
+function renderFamilyQuestions(){
+  const container = document.getElementById('familyConnectionsQuestions');
+  if(!container) return;
+  const questions = (state.familyQuestions || []).slice().sort((a,b)=>b.createdAt-a.createdAt);
+  const openCount = questions.filter(q => q.status !== 'answered').length;
+
+  if(questions.length === 0){
+    container.innerHTML = `<div class="empty-state" style="padding:28px 16px;"><div class="empty-icon">💬</div><h3 style="margin-bottom:8px;">No questions from family yet</h3><p>When someone asks about a memory, it will appear here as the beginning of a new story.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
+      <div>
+        <div class="label">Questions From Family</div>
+        <h2 style="font-size:1.25rem;">${openCount} waiting, ${questions.length} total</h2>
+      </div>
+    </div>
+    <div class="family-question-list">
+    ${questions.map(q => renderFamilyQuestionCard(q, true)).join('')}
+  </div>`;
+  wireFamilyQuestionActions();
+}
+
+function renderFamilyQuestionCard(q, includeActions){
+  const answered = q.status === 'answered';
+  const answeredMemory = answered ? state.memories.find(m => m.id === q.answeredMemoryId) : null;
+  const sourceMemory = q.sourceMemoryId ? state.memories.find(m => m.id === q.sourceMemoryId) : null;
+  const wisdomAdded = !!(answeredMemory && answeredMemory.wisdom && answeredMemory.wisdom.insights);
+  return `
+    <div class="family-question-card" data-family-question="${q.id}">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div>
+          <div class="family-question-text">${escapeHtml(q.text)}</div>
+          <div class="family-question-meta">Asked by ${escapeHtml(q.who || 'Family')} - ${new Date(q.createdAt).toLocaleDateString()}</div>
+          ${sourceMemory ? `<div class="family-question-meta">About: ${escapeHtml(sourceMemory.title)}</div>` : ''}
+        </div>
+        <span class="question-status">${answered ? 'Answered' : 'Waiting'}</span>
+      </div>
+      <div class="connection-flow">
+        <span class="flow-step active">Family Question</span>
+        <span class="flow-arrow">-></span>
+        <span class="flow-step ${answeredMemory ? 'active' : ''}">Story Created</span>
+        <span class="flow-arrow">-></span>
+        <span class="flow-step ${wisdomAdded ? 'active' : ''}">Wisdom Added</span>
+      </div>
+      ${answeredMemory ? `<div class="family-question-actions"><button class="btn outline small" data-question-source="${answeredMemory.id}">Read story: ${escapeHtml(answeredMemory.title)}</button></div>` : ''}
+      ${includeActions && !answered ? `<div class="family-question-actions">
+        <button class="btn small" data-answer-family-question="${q.id}">Answer with Lineage</button>
+        <button class="btn outline small" data-delete-family-question="${q.id}">Remove</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function wireFamilyQuestionActions(){
+  document.querySelectorAll('[data-answer-family-question]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      showScreen('interview');
+      chooseFamilyQuestion(btn.dataset.answerFamilyQuestion);
+    });
+  });
+  document.querySelectorAll('[data-delete-family-question]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      state.familyQuestions = state.familyQuestions.filter(q => q.id !== btn.dataset.deleteFamilyQuestion);
+      await saveFamilyQuestions();
+      renderFamily();
+    });
+  });
+  document.querySelectorAll('[data-question-source]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      jumpToMemory(btn.dataset.questionSource);
+    });
+  });
+}
+
+async function submitFamilyQuestion(){
+  const whoInput = document.getElementById('familyQuestionWho');
+  const questionInput = document.getElementById('familyQuestionText');
+  const note = document.getElementById('familyQuestionNote');
+  const who = whoInput.value.trim() || 'Family';
+  const text = questionInput.value.trim();
+  if(!text){
+    questionInput.focus();
+    return;
+  }
+  await addFamilyQuestion({ who, text });
+  questionInput.value = '';
+  note.textContent = 'Question added. It will appear in Family Connections.';
+  renderFamily();
+}
+
+async function addFamilyQuestion({ who, text, sourceMemoryId }){
+  state.familyQuestions.unshift({
+    id: 'fq_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    who: who || 'Family',
+    text,
+    sourceMemoryId: sourceMemoryId || null,
+    status: 'open',
+    createdAt: Date.now()
+  });
+  await saveFamilyQuestions();
+}
+
+// ---------- skeleton loader ----------
+function renderSkeletonCards(count = 3){
+  return Array.from({length: count}, () => `
+    <div class="skeleton-card">
+      <div class="skeleton skeleton-block" style="width:55%;"></div>
+      <div class="skeleton skeleton-block short"></div>
+      <div class="skeleton skeleton-block tall" style="margin-top:14px;"></div>
+    </div>
+  `).join('');
+}
+
+// ---------- devpost copy buttons ----------
+function wireDevpostCopyButtons(){
+  document.querySelectorAll('.devpost-copy-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const text = btn.dataset.copy;
+      navigator.clipboard.writeText(text).then(()=>{
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        btn.style.background = 'var(--green-light)';
+        setTimeout(()=>{ btn.textContent = orig; btn.style.background = ''; }, 2000);
+      });
+    });
+  });
+}
+
+document.getElementById('screen-settings').addEventListener('click', ()=> wireDevpostCopyButtons(), {once:true});
+async function checkApiAvailability(){
+  // Notice intentionally suppressed in public version — the app gracefully falls back
+  // to the offline question bank without needing to announce it to users.
+  return;
+}
+
+// ---------- tour ----------
+const TOUR_STEPS = [
+  {
+    title: 'Welcome to Lineage',
+    body: 'Lineage is your AI family historian. It conducts warm, conversational interviews, turns your answers into polished memories, and extracts wisdom for future generations. This quick tour shows you everything.',
+    screen: null
+  },
+  {
+    title: 'Tell a Story',
+    body: 'The AI asks you one thoughtful question at a time — about a childhood smell, a first job, a love story. Type or speak your answer. It follows up naturally, then saves a polished version in your voice.',
+    screen: 'interview'
+  },
+  {
+    title: 'The Timeline',
+    body: 'Every memory is organized by life period — Childhood, Coming of Age, Career, and more. Search and filter your archive as it grows. Each memory can hold photos, family notes, and privacy settings.',
+    screen: 'timeline'
+  },
+  {
+    title: 'Family Connections',
+    body: 'Family members can read shared memories, leave notes, and ask questions. Those questions become your next interview prompts — closing the loop between storyteller and listener.',
+    screen: 'family'
+  },
+  {
+    title: 'Family Wisdom Book',
+    body: 'This is what makes Lineage unique. The AI reads every story and extracts life lessons, traditions, core values, and advice — organizing them into a book future generations can actually learn from.',
+    screen: 'wisdom'
+  },
+  {
+    title: 'Untold Stories',
+    body: 'Lineage analyzes your archive and finds the important life chapters still missing — childhood, immigration, parenting, career milestones. Tap any chapter to see why it matters and get suggested questions.',
+    screen: 'gaps'
+  },
+  {
+    title: 'Legacy Letter',
+    body: 'After a few memories are saved, Lineage drafts a warm, first-person letter from you to your children, grandchildren, or future family — written entirely from your own stories, in your own voice.',
+    screen: 'legacy'
+  }
+];
+
+let tourStep = 0;
+function startTour(){
+  tourStep = 0;
+  showTourStep();
+}
+
+function showTourStep(){
+  const overlay = document.getElementById('tourOverlay');
+  const step = TOUR_STEPS[tourStep];
+  const total = TOUR_STEPS.length;
+  if(step.screen) showScreen(step.screen);
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div class="tour-card">
+      <div class="tour-step-label">Step ${tourStep + 1} of ${total}</div>
+      <div class="tour-title">${step.title}</div>
+      <div class="tour-body">${step.body}</div>
+      <div class="tour-dots">
+        ${TOUR_STEPS.map((_,i)=>`<div class="tour-dot ${i===tourStep?'active':''}"></div>`).join('')}
+      </div>
+      <div class="tour-actions">
+        <button class="tour-skip" id="tourSkip">Skip tour</button>
+        <div style="display:flex;gap:10px;">
+          ${tourStep > 0 ? `<button class="btn outline small" id="tourBack">← Back</button>` : ''}
+          <button class="btn" id="tourNext">${tourStep === total - 1 ? 'Finish ✓' : 'Next →'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('tourSkip').addEventListener('click', closeTour);
+  document.getElementById('tourNext').addEventListener('click', ()=>{
+    if(tourStep < total - 1){ tourStep++; showTourStep(); }
+    else closeTour();
+  });
+  const backBtn = document.getElementById('tourBack');
+  if(backBtn) backBtn.addEventListener('click', ()=>{ tourStep--; showTourStep(); });
+}
+
+function closeTour(){
+  document.getElementById('tourOverlay').style.display = 'none';
+  showScreen('interview');
+}
+
+document.getElementById('startTourBtn').addEventListener('click', startTour);
+document.getElementById('quickTourBtn').addEventListener('click', startTour);
+
+function renderFamilyQuestionsPreview(){
+  const preview = document.getElementById('familyQuestionsPreview');
+  if(!preview) return;
+  const openQuestions = getOpenFamilyQuestions();
+  if(openQuestions.length === 0){
+    preview.innerHTML = `<div class="empty-state" style="padding:28px 16px;"><h3 style="margin-bottom:8px;">No questions waiting</h3><p>Submitted questions will appear here for the storyteller.</p></div>`;
+    return;
+  }
+  preview.innerHTML = `<div class="family-question-list">
+    ${openQuestions.slice(0,4).map(q => renderFamilyQuestionCard(q, false)).join('')}
+  </div>`;
+}
+// ---------- family connections role state ----------
+let familyRole = 'storyteller'; // 'storyteller' or 'family'
+
+function wireRoleSwitcher(){
+  const stBtn = document.getElementById('roleStoryteller');
+  const fmBtn = document.getElementById('roleFamily');
+  if(!stBtn || !fmBtn) return;
+  stBtn.addEventListener('click', ()=>{
+    familyRole = 'storyteller';
+    stBtn.classList.add('active'); fmBtn.classList.remove('active');
+    renderFamily();
+  });
+  fmBtn.addEventListener('click', ()=>{
+    familyRole = 'family';
+    fmBtn.classList.add('active'); stBtn.classList.remove('active');
+    renderFamily();
+  });
+}
+
+// ---------- family connections ----------
+function renderFamily(){
+  const container = document.getElementById('familyContent');
+  if(!container) return;
+  if(familyRole === 'storyteller') renderFamilyStoryteller(container);
+  else renderFamilyMember(container);
+}
+
+function renderFamilyStoryteller(container){
+  const shared = state.memories.filter(m=>m.privacy==='shared').sort((a,b)=>b.createdAt-a.createdAt);
+  const openCount = getOpenFamilyQuestions().length;
+  container.innerHTML = `
+    <div class="role-intro">
+      <div class="role-icon">🎙️</div>
+      <h2>Your storyteller view</h2>
+      <p>Family members can ask questions and leave notes on your shared stories below. Answer their questions by going to "Tell a Story" — they'll appear as prompts in your next session.</p>
+      <div class="role-steps">
+        <div class="role-step"><strong>1. Share a memory</strong>Go to The Timeline and toggle a memory to "Shared"</div>
+        <div class="role-step"><strong>2. Family reacts</strong>They leave notes and ask questions here</div>
+        <div class="role-step"><strong>3. Answer &amp; record</strong>Their questions become interview prompts for you</div>
+      </div>
+      ${openCount > 0 ? `<div style="margin-top:14px;"><a href="#" id="goAnswerLink" style="font-weight:700;">📬 ${openCount} question${openCount===1?'':'s'} from family waiting for you →</a></div>` : ''}
+    </div>
+    <div id="familyConnectionsQuestions"></div>
+    ${shared.length === 0
+      ? `<div class="empty-state" style="margin-top:16px;"><div class="empty-icon">🔒</div><h3 style="margin-bottom:8px;">No shared memories yet</h3><p>Go to The Timeline, open a memory card, and tap "Share with family" — it will appear here for your family to read and respond to.</p></div>`
+      : shared.map(m => renderSharedMemoryCard(m)).join('')
+    }
+  `;
+  renderFamilyQuestions();
+  const goLink = document.getElementById('goAnswerLink');
+  if(goLink) goLink.addEventListener('click', e=>{ e.preventDefault(); showScreen('interview'); startInterviewLoop(); });
+  wireSharedMemoryActions();
+}
+
+function renderFamilyMember(container){
+  const shared = state.memories.filter(m=>m.privacy==='shared').sort((a,b)=>b.createdAt-a.createdAt);
+  const name = state.profile && state.profile.name ? state.profile.name : 'the storyteller';
+  container.innerHTML = `
+    <div class="role-intro">
+      <div class="role-icon">👨‍👩‍👧</div>
+      <h2>You're viewing as a family member</h2>
+      <p>Read ${escapeHtml(name)}'s shared memories, leave a note of appreciation, or ask a question that could become a new story in the archive.</p>
+      <div class="role-steps">
+        <div class="role-step"><strong>1. Read memories</strong>Explore what ${escapeHtml(name)} has shared below</div>
+        <div class="role-step"><strong>2. Leave a note</strong>React, share your own memory of the same event</div>
+        <div class="role-step"><strong>3. Ask a question</strong>Your question can prompt a brand new story</div>
+      </div>
+    </div>
+    <div class="question-submit">
+      <div class="label" style="margin-bottom:6px;">Ask a question</div>
+      <h2 style="font-size:1.15rem;">Something you've always wanted to know?</h2>
+      <p style="color:var(--ink-soft);font-size:0.88rem;margin:6px 0 12px;">Your question will appear as a story prompt for ${escapeHtml(name)}. Be specific — the best questions ask about a place, person, or moment.</p>
+      <div class="question-form">
+        <input type="text" id="familyQuestionWho" placeholder="Your name" maxlength="40" />
+        <input type="text" id="familyQuestionText" placeholder="e.g. What was your first day of school like?" maxlength="220" />
+        <button class="btn small" id="submitFamilyQuestion">Ask</button>
+      </div>
+      <p class="letter-note" id="familyQuestionNote"></p>
+    </div>
+    ${shared.length === 0
+      ? `<div class="empty-state" style="margin-top:16px;"><div class="empty-icon">📖</div><h3 style="margin-bottom:8px;">No stories shared yet</h3><p>${escapeHtml(name)} hasn't shared any memories yet. Check back soon.</p></div>`
+      : shared.map(m => renderSharedMemoryCard(m)).join('')
+    }
+  `;
+  document.getElementById('submitFamilyQuestion').addEventListener('click', submitFamilyQuestion);
+  document.getElementById('familyQuestionText').addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); submitFamilyQuestion(); }
+  });
+  wireSharedMemoryActions();
+}
+
+function renderSharedMemoryCard(m){
+  return `
+    <div class="memory-card" style="margin-top:16px;">
+      <div class="memory-title">${escapeHtml(m.title)}</div>
+      <div class="memory-meta">${escapeHtml(m.period)} · ${new Date(m.createdAt).toLocaleDateString()}</div>
+      <div class="memory-story" style="margin-top:12px;">${escapeHtml(m.story)}</div>
+      <div class="photo-grid">
+        ${m.photos.map(p=>`<div class="photo-item"><img src="${p.dataUrl}" alt="${escapeHtml(p.caption)}"/><div style="font-size:0.78rem;color:var(--ink-soft);margin-top:6px;">${escapeHtml(p.caption)}</div></div>`).join('')}
+      </div>
+      <div class="comments-box">
+        <div class="label" style="margin-bottom:8px;">Family notes</div>
+        ${(state.comments[m.id]||[]).map(c=>`<div class="comment"><div class="who">${escapeHtml(c.who)}</div>${escapeHtml(c.text)}</div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <input type="text" placeholder="Your name" class="caption-input" style="width:120px;border:1px solid var(--line);border-radius:8px;padding:8px;" data-who="${m.id}" />
+          <input type="text" placeholder="Leave a note or reaction..." class="caption-input" style="flex:1;min-width:160px;border:1px solid var(--line);border-radius:8px;padding:8px;" data-note="${m.id}" />
+          <button class="btn small" data-submit-note="${m.id}">Post</button>
+        </div>
+      </div>
+      <div class="ask-memory-box">
+        <div class="label" style="margin-bottom:8px;">Ask About This Memory</div>
+        <div class="family-question-meta">Examples: How did this change your life? What happened after? What advice would you give someone in this situation?</div>
+        <div class="ask-memory-form">
+          <input type="text" placeholder="Your name" style="width:120px;" data-ask-who="${m.id}" />
+          <input type="text" placeholder="Ask a follow-up question..." style="flex:1;min-width:180px;" data-ask-question="${m.id}" />
+          <button class="btn small" data-submit-memory-question="${m.id}">Ask</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function wireSharedMemoryActions(){
+  document.querySelectorAll('[data-submit-note]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.dataset.submitNote;
+      const who = document.querySelector(`[data-who="${id}"]`).value.trim() || 'Family';
+      const text = document.querySelector(`[data-note="${id}"]`).value.trim();
+      if(!text) return;
+      if(!state.comments[id]) state.comments[id] = [];
+      state.comments[id].push({who, text, createdAt: Date.now()});
+      await saveComments();
+      renderFamily();
+    });
+  });
+  document.querySelectorAll('[data-submit-memory-question]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.dataset.submitMemoryQuestion;
+      const whoInput = document.querySelector(`[data-ask-who="${id}"]`);
+      const questionInput = document.querySelector(`[data-ask-question="${id}"]`);
+      const text = questionInput.value.trim();
+      if(!text){ questionInput.focus(); return; }
+      await addFamilyQuestion({ who: whoInput.value.trim() || 'Family', text, sourceMemoryId: id });
+      renderFamily();
+    });
+  });
+}
+
+// ---------- demo data for judges / first run ----------
+async function injectDemoDataIfEmpty(){ /* clean version — no demo data */ }
+
+
+// ---------- boot ----------
+async function boot(){
+  await loadAll();
+  applyTextScale();
+  wireRoleSwitcher();
+  if(state.profile && state.profile.name){
+    document.getElementById('topHeader').style.display='flex';
+    showScreen('interview');
+    startInterviewLoop();
+    checkApiAvailability();
+  }else{
+    showScreen('onboard');
+  }
+}
+// ---------- onboard char counter ----------
+document.getElementById('nameInput').addEventListener('input', function(){
+  const len = this.value.length;
+  const counter = document.getElementById('nameCharCount');
+  if(counter) counter.textContent = `${len}/40`;
+});
+
+boot();
+</script>
+</body>
+</html>
